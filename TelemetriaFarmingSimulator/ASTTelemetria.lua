@@ -1,151 +1,166 @@
-ASTTelemetria = {
-	Nome = "",
-	Dano = 0.0,
-	TempoOperacao = 0,
-	Velocidade = 0,
-	CapacidadeCombustivel = 0.0,
-	QuantidadeCombustivel = 0.0,
-	RotacaoMotorMaximo = 0,
-	RotacaoMotor = 0,
-	MotorLigado = false,
-	Marcha = 0,
-	Luz = false,
-	LuzAlta = false,
-	SetaDireita = false,
-	SetaEsquerda = false,
-	Alerta = false,	
-	Limpador = false
-};
+ASTTelemetria = {};
 
-local tempoAtualizacao = 5000;
+local tempoAtualizacao = 200;
 local tempoAtualizacaoAtual = 0;
 
-function ASTTelemetria:update(dt)
+local telemetria = {}
+
+function ASTTelemetria:update(dt)	
 	tempoAtualizacaoAtual = tempoAtualizacaoAtual + dt;
 	if tempoAtualizacaoAtual >= tempoAtualizacao then
 		tempoAtualizacaoAtual = 0;
 
-		Nome = "";
-		Dano = 0.0;
-		TempoOperacao = 0;
-		Velocidade = 0;
-		CapacidadeCombustivel = 0.0;
-		QuantidadeCombustivel = 0.0;
-		RotacaoMotorMaximo = 0;
-		RotacaoMotor = 0;
-		MotorLigado = false;
-		Marcha = 0;
-		Luz = false;
-		LuzAlta = false;
-		SetaDireita = false;
-		SetaEsquerda = false;
-		Alerta = false;	
-		Limpador = false;
+		ASTTelemetria:ZerarTelemetria();
 
 		local veiculo = g_currentMission.controlledVehicle;
 		local temVeiculo = veiculo ~= nil;
 		local ehMotorizado = temVeiculo and veiculo.spec_motorized ~= nil;
 
 		if temVeiculo and ehMotorizado then
-			ASTTelemetria.Nome = veiculo:getName();
+			telemetria.Nome = veiculo:getName();
 			if veiculo.getWearTotalAmount ~= nil and veiculo:getWearTotalAmount() ~= nil then
-				ASTTelemetria.Dano = veiculo:getWearTotalAmount();
+				telemetria.Dano = veiculo:getWearTotalAmount();
 			end;
 
 			if veiculo.operatingTime ~= nil then
-				ASTTelemetria.TempoOperacao = veiculo.operatingTime;
+				telemetria.TempoOperacao = veiculo.operatingTime;
 			end;
 
 			local ultimaVelocidade = math.max(0, veiculo:getLastSpeed() * veiculo.spec_motorized.speedDisplayScale)
-			ASTTelemetria.Velocidade = ultimaVelocidade;
-			if ASTTelemetria.Velocidade < 0.5 then
-				ASTTelemetria.Velocidade = 0
+			telemetria.Velocidade = ultimaVelocidade;
+			if telemetria.Velocidade < 0.5 then
+				telemetria.Velocidade = 0
 			end
-			if math.abs(ultimaVelocidade-ASTTelemetria.Velocidade) > 0.5 then
-				ASTTelemetria.Velocidade = ASTTelemetria.Velocidade + 1
+			if math.abs(ultimaVelocidade-telemetria.Velocidade) > 0.5 then
+				telemetria.Velocidade = telemetria.Velocidade + 1
 			end
 
 			--DESCOBRIR COMO OBTER O TIPO DE COMBUSTIVEL ATUAL
 			local fuelFillType = veiculo:getConsumerFillUnitIndex(FillType.DIESEL)
 			if veiculo.getFillUnitCapacity ~= nil then
-				ASTTelemetria.CapacidadeCombustivel = veiculo:getFillUnitCapacity(fuelFillType);
+				telemetria.CapacidadeCombustivel = veiculo:getFillUnitCapacity(fuelFillType);
 			end;
 
 			if veiculo.getFillUnitFillLevel ~= nil then
-				ASTTelemetria.QuantidadeCombustivel = veiculo:getFillUnitFillLevel(fuelFillType);
+				telemetria.QuantidadeCombustivel = veiculo:getFillUnitFillLevel(fuelFillType);
 			end;
 
 			local motor = veiculo:getMotor();
 			if motor ~= nil then	
-				if Motor.getMaxRpm ~= nil then
-					ASTTelemetria.RotacaoMotorMaximo = math.ceil(motor:getMaxRpm());
+				if motor.getMaxRpm ~= nil then
+					telemetria.RotacaoMotorMaximo = math.ceil(motor:getMaxRpm());
 				end	
-				if Motor.getLastRealMotorRpm ~= nil then
-					ASTTelemetria.RotacaoMotor = math.ceil(motor:getLastRealMotorRpm());
+				if motor.getLastRealMotorRpm ~= nil then
+					telemetria.RotacaoMotor = math.ceil(motor:getLastRealMotorRpm());
 				end		
-				ASTTelemetria.Marcha = motor.gear;					
+				telemetria.Marcha = motor.gear;					
 			end;
 
 			local espec_motorizado = veiculo.spec_motorized;
 			if espec_motorizado ~= nil then
-				ASTTelemetria.MotorLigado = espec_motorizado.isMotorStarted;
+				telemetria.MotorLigado = espec_motorizado.isMotorStarted;
 			end;
 
-			local = espec_luzes = veiculo.spec_lights;
+			local espec_luzes = veiculo.spec_lights;
 			if espec_luzes ~= nil then
 				if espec_luzes.turnLightState ~= nil then
 					local estadoSetas = espec_luzes.turnLightState;
-					ASTTelemetria.SetaDireita = estadoSetas	== Lights.TURNLIGHT_RIGHT;
-					ASTTelemetria.SetaEsquerda = estadoSetas == Lights.TURNLIGHT_LEFT;
-					ASTTelemetria.Alerta = estadoSetas == Lights.TURNLIGHT_HAZARD;
+					telemetria.SetaDireita = estadoSetas	== Lights.TURNLIGHT_RIGHT;
+					telemetria.SetaEsquerda = estadoSetas == Lights.TURNLIGHT_LEFT;
+					telemetria.Alerta = estadoSetas == Lights.TURNLIGHT_HAZARD;
 
 					--para calcular se a luz esta piscando ou apagada
 					--local alpha = MathUtil.clamp((math.cos(7*getShaderTimeSec()) + 0.2), 0, 1)
 				end;
 
 
-				--Descobrir como saber se a luz e luz alta estão ligadas
-				--tipos de luzes parecem ser 0 1 2, sendo que 0 deve ser a luz baixa				
+				--0 - luz ligada				
+				--1 - luz de trabalho trazeira ligada
+				--2 - luz de trabalho frontal ligada
+				--3 - luz alta ligada
 				if espec_luzes.lightsTypesMask ~= nil then
-					--percore as luzes existentes
-					--for _,light in pairs(light.lightTypes) do
-					ASTTelemetria.Luz = bitAND(espec_luzes.lightsTypesMask, 2^0) ~= 0;
-					ASTTelemetria.LuzAlta = bitAND(espec_luzes.lightsTypesMask, 2^1) ~= 0;
+					telemetria.Luz = bitAND(espec_luzes.lightsTypesMask, 2^0) ~= 0;
+					telemetria.LuzAlta = bitAND(espec_luzes.lightsTypesMask, 2^3) ~= 0;
 				end;
 			end;			
 
 			local spec_limpador = veiculo.spec_wipers;
-			if spec_limpador ~= nil and spec_limpador.hasWipers and ASTTelemetria.MotorLigado then
+			if spec_limpador ~= nil and spec_limpador.hasWipers and telemetria.MotorLigado then
 				local escalaChuva = g_currentMission.environment.weather:getRainFallScale();
 				if escalaChuva > 0 then
 					for _, limpador in pairs(spec_limpador.wipers) do
 						for stateIndex,state in ipairs(limpador.states) do
-							if spec.lastRainScale <= state.maxRainValue then
-								ASTTelemetria.Limpador = true;
+							if escalaChuva <= state.maxRainValue then
+								telemetria.Limpador = true;
 								break
 							end
 						end
-						if ASTTelemetria.Limpador then
+						if telemetria.Limpador then
 							break;
 						end
 					end
 				end
 			end;
 
-			print(DebugUtil.printTableRecursively(ASTTelemetria,".",0,1));
+			--print(DebugUtil.printTableRecursively(telemetria,".",0,1));
 
 			--print(DebugUtil.printTableRecursively(g_currentMission.controlledVehicle,".",0,5));
 		end;
 
-		local textoArquivo = "";
-		for _,v in pairs(obj) do
-			textoArquivo = textoArquivo .. v .. "|#|";
-        end
 		--g_currentModDirectory
-		local file = io.open ("telemetria.txt", "w+");
-		file:write(textoArquivo);
-		file:close();
+		local file = io.open ("telemetria.txt", "w");
+		if file ~= nil then
+			file:write(ASTTelemetria:MontarTextoArquivo());
+			file:close();
+		end;
 	end;	
+end
+
+function ASTTelemetria:ZerarTelemetria()
+	telemetria.Nome = "";
+	telemetria.Dano = 0.0;
+	telemetria.TempoOperacao = 0;
+	telemetria.Velocidade = 0;
+	telemetria.CapacidadeCombustivel = 0.0;
+	telemetria.QuantidadeCombustivel = 0.0;
+	telemetria.RotacaoMotorMaximo = 0;
+	telemetria.RotacaoMotor = 0;
+	telemetria.MotorLigado = false;
+	telemetria.Marcha = 0;
+	telemetria.Luz = false;
+	telemetria.LuzAlta = false;
+	telemetria.SetaDireita = false;
+	telemetria.SetaEsquerda = false;
+	telemetria.Alerta = false;	
+	telemetria.Limpador = false;
+end
+
+function ASTTelemetria:MontarTextoArquivo()
+	local texto = ASTTelemetria:AdicionarTexto("", telemetria.Nome)
+	texto = ASTTelemetria:AdicionarTexto(texto, ASTTelemetria:FormatarNumero(telemetria.Dano));
+	texto = ASTTelemetria:AdicionarTexto(texto, ASTTelemetria:FormatarNumero(telemetria.TempoOperacao));
+	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.Velocidade));
+	texto = ASTTelemetria:AdicionarTexto(texto, ASTTelemetria:FormatarNumero(telemetria.CapacidadeCombustivel));
+	texto = ASTTelemetria:AdicionarTexto(texto, ASTTelemetria:FormatarNumero(telemetria.QuantidadeCombustivel));
+	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.RotacaoMotorMaximo));
+	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.RotacaoMotor));
+	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.MotorLigado));
+	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.Marcha));
+	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.Luz));
+	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.LuzAlta));
+	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.SetaDireita));
+	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.SetaEsquerda));
+	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.Alerta));
+	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.Limpador));
+	return texto;
+end 
+
+function ASTTelemetria:AdicionarTexto(texto, valor)
+	return texto .. valor .. "|#|";
+end
+
+function ASTTelemetria:FormatarNumero(numero)
+	return string.format("%.2f", numero)
 end
 
 addModEventListener(ASTTelemetria);
