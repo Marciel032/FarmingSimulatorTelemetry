@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<modDesc descVersion="40">
+    <author>Analogic SIM Tech</author>
+	<authorContact>Analogic SIM Tech</authorContact>
+    <version>1.0.0.0</version>
+    <title>
+        <en>Teste</en>
+    </title>
+    <description>
+        <en><![CDATA[Teste]]></en>
+    </description>
+    <iconFilename>AnSimTechLogo.dds</iconFilename>
+    <multiplayer supported="true" />
+    <extraSourceFiles>
+        <sourceFile filename="ASTTelemetria.lua"/>
+    </extraSourceFiles>
+</modDesc>
