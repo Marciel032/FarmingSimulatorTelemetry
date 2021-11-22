@@ -136,6 +136,15 @@ function ASTTelemetria:update(dt)
 
 			--print(DebugUtil.printTableRecursively(g_currentMission.controlledVehicle,".",0,5));
 		end;
+
+		local textoArquivo = "";
+		for _,v in pairs(obj) do
+			textoArquivo = textoArquivo .. v .. "|#|";
+        end
+
+		local file = io.open ("telemetria.txt", "w+");
+		file:write(textoArquivo);
+		file:close();
 	end;	
 end
 
