@@ -141,7 +141,7 @@ function ASTTelemetria:update(dt)
 		for _,v in pairs(obj) do
 			textoArquivo = textoArquivo .. v .. "|#|";
         end
-
+		--g_currentModDirectory
 		local file = io.open ("telemetria.txt", "w+");
 		file:write(textoArquivo);
 		file:close();
