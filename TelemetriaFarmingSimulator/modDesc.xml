@@ -9,9 +9,9 @@
     <description>
         <en><![CDATA[Teste]]></en>
     </description>
-    <iconFilename>AnSimTechLogo.dds</iconFilename>
+    <iconFilename>FSTTelemetryLogo.dds</iconFilename>
     <multiplayer supported="true" />
     <extraSourceFiles>
-        <sourceFile filename="ASTTelemetria.lua"/>
+        <sourceFile filename="FSTTelemetry.lua"/>
     </extraSourceFiles>
 </modDesc>
