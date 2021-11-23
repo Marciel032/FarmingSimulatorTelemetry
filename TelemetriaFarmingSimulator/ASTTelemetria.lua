@@ -27,10 +27,7 @@ function ASTTelemetria:update(dt)
 			end;
 
 			local ultimaVelocidade = math.max(0, veiculo:getLastSpeed() * veiculo.spec_motorized.speedDisplayScale)
-			telemetria.Velocidade = ultimaVelocidade;
-			if telemetria.Velocidade < 0.5 then
-				telemetria.Velocidade = 0
-			end
+			telemetria.Velocidade = math.floor(ultimaVelocidade);
 			if math.abs(ultimaVelocidade-telemetria.Velocidade) > 0.5 then
 				telemetria.Velocidade = telemetria.Velocidade + 1
 			end
@@ -43,6 +40,11 @@ function ASTTelemetria:update(dt)
 
 			if veiculo.getFillUnitFillLevel ~= nil then
 				telemetria.QuantidadeCombustivel = veiculo:getFillUnitFillLevel(fuelFillType);
+			end;			
+
+			local espec_motorizado = veiculo.spec_motorized;
+			if espec_motorizado ~= nil then
+				telemetria.MotorLigado = espec_motorizado.isMotorStarted;
 			end;
 
 			local motor = veiculo:getMotor();
@@ -50,15 +52,10 @@ function ASTTelemetria:update(dt)
 				if motor.getMaxRpm ~= nil then
 					telemetria.RotacaoMotorMaximo = math.ceil(motor:getMaxRpm());
 				end	
-				if motor.getLastRealMotorRpm ~= nil then
+				if motor.getLastRealMotorRpm ~= nil and telemetria.MotorLigado then
 					telemetria.RotacaoMotor = math.ceil(motor:getLastRealMotorRpm());
 				end		
 				telemetria.Marcha = motor.gear;					
-			end;
-
-			local espec_motorizado = veiculo.spec_motorized;
-			if espec_motorizado ~= nil then
-				telemetria.MotorLigado = espec_motorizado.isMotorStarted;
 			end;
 
 			local espec_luzes = veiculo.spec_lights;
@@ -108,7 +105,7 @@ function ASTTelemetria:update(dt)
 		end;
 
 		--g_currentModDirectory
-		local file = io.open ("telemetria.txt", "w");
+		local file = io.open ("telemetria.ast", "w");
 		if file ~= nil then
 			file:write(ASTTelemetria:MontarTextoArquivo());
 			file:close();
@@ -137,15 +134,15 @@ end
 
 function ASTTelemetria:MontarTextoArquivo()
 	local texto = ASTTelemetria:AdicionarTexto("", telemetria.Nome)
-	texto = ASTTelemetria:AdicionarTexto(texto, ASTTelemetria:FormatarNumero(telemetria.Dano));
+	texto = ASTTelemetria:AdicionarTexto(texto, ASTTelemetria:FormatarDecimal(telemetria.Dano));
 	texto = ASTTelemetria:AdicionarTexto(texto, ASTTelemetria:FormatarNumero(telemetria.TempoOperacao));
-	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.Velocidade));
-	texto = ASTTelemetria:AdicionarTexto(texto, ASTTelemetria:FormatarNumero(telemetria.CapacidadeCombustivel));
-	texto = ASTTelemetria:AdicionarTexto(texto, ASTTelemetria:FormatarNumero(telemetria.QuantidadeCombustivel));
-	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.RotacaoMotorMaximo));
-	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.RotacaoMotor));
+	texto = ASTTelemetria:AdicionarTexto(texto, ASTTelemetria:FormatarNumero(telemetria.Velocidade));
+	texto = ASTTelemetria:AdicionarTexto(texto, ASTTelemetria:FormatarDecimal(telemetria.CapacidadeCombustivel));
+	texto = ASTTelemetria:AdicionarTexto(texto, ASTTelemetria:FormatarDecimal(telemetria.QuantidadeCombustivel));
+	texto = ASTTelemetria:AdicionarTexto(texto, ASTTelemetria:FormatarNumero(telemetria.RotacaoMotorMaximo));
+	texto = ASTTelemetria:AdicionarTexto(texto, ASTTelemetria:FormatarNumero(telemetria.RotacaoMotor));
 	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.MotorLigado));
-	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.Marcha));
+	texto = ASTTelemetria:AdicionarTexto(texto, ASTTelemetria:FormatarNumero(telemetria.Marcha));
 	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.Luz));
 	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.LuzAlta));
 	texto = ASTTelemetria:AdicionarTexto(texto, tostring(telemetria.SetaDireita));
@@ -159,8 +156,12 @@ function ASTTelemetria:AdicionarTexto(texto, valor)
 	return texto .. valor .. "|#|";
 end
 
-function ASTTelemetria:FormatarNumero(numero)
-	return string.format("%.2f", numero)
+function ASTTelemetria:FormatarDecimal(valor)
+	return string.format("%.2f", valor)
+end
+
+function ASTTelemetria:FormatarNumero(valor)
+	return string.format("%d", valor)
 end
 
 addModEventListener(ASTTelemetria);
