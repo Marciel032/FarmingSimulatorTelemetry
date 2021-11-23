@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="40">
-    <author>Analogic SIM Tech</author>
-	<authorContact>Analogic SIM Tech</authorContact>
+    <author>Analogic SIM X</author>
+	<authorContact>Analogic SIM X</authorContact>
     <version>1.0.0.0</version>
     <title>
         <en>Teste</en>
@@ -9,9 +9,9 @@
     <description>
         <en><![CDATA[Teste]]></en>
     </description>
-    <iconFilename>FSTTelemetryLogo.dds</iconFilename>
+    <iconFilename>FSTelemetryLogo.dds</iconFilename>
     <multiplayer supported="true" />
     <extraSourceFiles>
-        <sourceFile filename="FSTTelemetry.lua"/>
+        <sourceFile filename="FSTelemetry.lua"/>
     </extraSourceFiles>
 </modDesc>

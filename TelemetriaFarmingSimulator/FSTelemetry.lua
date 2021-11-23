@@ -5,9 +5,8 @@ local currentRefreshInterval = 0;
 local drivingVehicleLastState = false;
 local nameLastState = "";
 
-local tempDirectory = os.getenv('TEMP');
-local dynamicFilePath = tempDirectory .. "\\dynamicTelemetry.sim";
-local staticFilePath = tempDirectory .. "\\staticTelemetry.sim";
+local dynamicFilePath = Utils.getFilename("dynamicTelemetry.sim", g_currentModDirectory);
+local staticFilePath = Utils.getFilename("staticTelemetry.sim", g_currentModDirectory);
 
 local dynamicTelemetry = {}
 local staticTelemetry = {}
@@ -50,7 +49,7 @@ local buildDynamicText = function()
 	text = addText(text, formatNumber(dynamicTelemetry.Speed));
 	text = addText(text, formatDecimal(dynamicTelemetry.Fuel));
 	text = addText(text, formatNumber(dynamicTelemetry.RPM));
-	text = addText(text, tostring(dynamicTelemetry.isMotorStarted));
+	text = addText(text, tostring(dynamicTelemetry.IsMotorStarted));
 	text = addText(text, formatNumber(dynamicTelemetry.Gear));
 	text = addText(text, tostring(dynamicTelemetry.IsLightOn));
 	text = addText(text, tostring(dynamicTelemetry.IsLightHighOn));
@@ -68,21 +67,24 @@ local buildStaticText = function()
 	return text;
 end 
 
-local writeFile = function(name, content){
+local writeFile = function(name, content)
 	local file = io.open(name, "w");
 	if file ~= nil then
 		file:write(content);
 		file:close();
 	end;
-}
+end
 
 local writeDynamicFile = function()
 	writeFile(dynamicFilePath, buildDynamicText());
 end
 
 local writeStaticFile = function()
+	print(buildStaticText());
 	writeFile(staticFilePath, buildStaticText());
 end
+
+clearTelemetry();
 
 function FSTelemetry:update(dt)	
 	currentRefreshInterval = currentRefreshInterval + dt;
@@ -91,7 +93,7 @@ function FSTelemetry:update(dt)
 
 		local vehicle = g_currentMission.controlledVehicle;
 		local hasVehicle = vehicle ~= nil;
-		local isMotorized = vehicle.spec_motorized ~= nil;
+		local isMotorized = hasVehicle and vehicle.spec_motorized ~= nil;
 		--TODO - Check vehicle is driving by IA
 		local drivingVehicle = hasVehicle and isMotorized;
 
@@ -101,7 +103,7 @@ function FSTelemetry:update(dt)
 				dynamicTelemetry.IsMotorStarted = specMotorized.isMotorStarted;
 			end;
 
-			dynamicTelemetry.Name = vehicle:getName();
+			staticTelemetry.Name = vehicle:getName();
 			if vehicle.getWearTotalAmount ~= nil and vehicle:getWearTotalAmount() ~= nil then
 				dynamicTelemetry.Wear = vehicle:getWearTotalAmount();
 			end;
@@ -119,7 +121,7 @@ function FSTelemetry:update(dt)
 			--TODO: GET CURRENT FILL TYPE
 			local fuelFillType = vehicle:getConsumerFillUnitIndex(FillType.DIESEL)
 			if vehicle.getFillUnitCapacity ~= nil then
-				dynamicTelemetry.FuelMax = vehicle:getFillUnitCapacity(fuelFillType);
+				staticTelemetry.FuelMax = vehicle:getFillUnitCapacity(fuelFillType);
 			end;
 
 			if vehicle.getFillUnitFillLevel ~= nil then
@@ -129,7 +131,7 @@ function FSTelemetry:update(dt)
 			local motor = vehicle:getMotor();
 			if motor ~= nil then	
 				if motor.getMaxRpm ~= nil then
-					dynamicTelemetry.RPMMax = math.ceil(motor:getMaxRpm());
+					staticTelemetry.RPMMax = math.ceil(motor:getMaxRpm());
 				end	
 				if motor.getLastRealMotorRpm ~= nil and dynamicTelemetry.IsMotorStarted then
 					dynamicTelemetry.RPM = math.ceil(motor:getLastRealMotorRpm());
@@ -161,7 +163,7 @@ function FSTelemetry:update(dt)
 			end;			
 
 			local specWipers = vehicle.spec_wipers;
-			if specWipers ~= nil and specWipers.hasWipers and dynamicTelemetry.isMotorStarted then
+			if specWipers ~= nil and specWipers.hasWipers and dynamicTelemetry.IsMotorStarted then
 				local rainScale = g_currentMission.environment.weather:getRainFallScale();
 				if rainScale > 0 then
 					for _, wiper in pairs(specWipers.wipers) do
@@ -179,6 +181,7 @@ function FSTelemetry:update(dt)
 			end;			
 			writeDynamicFile();
 			--Just write static file when player change the vehicle
+			
 			if nameLastState ~= staticTelemetry.Name then
 				writeStaticFile();
 			end			
