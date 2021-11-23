@@ -5,6 +5,10 @@ local currentRefreshInterval = 0;
 local drivingVehicleLastState = false;
 local nameLastState = "";
 
+local tempDirectory = os.getenv('TEMP');
+local dynamicFilePath = tempDirectory .. "\\dynamicTelemetry.sim";
+local staticFilePath = tempDirectory .. "\\staticTelemetry.sim";
+
 local dynamicTelemetry = {}
 local staticTelemetry = {}
 
@@ -29,7 +33,7 @@ local clearTelemetry = function()
 end
 
 local addText = function(text, value)
-	return text .. value .. "|#|";
+	return text .. value .. ";";
 end
 
 local formatDecimal = function(value)
@@ -65,7 +69,6 @@ local buildStaticText = function()
 end 
 
 local writeFile = function(name, content){
-	--g_currentModDirectory
 	local file = io.open(name, "w");
 	if file ~= nil then
 		file:write(content);
@@ -74,11 +77,11 @@ local writeFile = function(name, content){
 }
 
 local writeDynamicFile = function()
-	writeFile("dynamicTelemetry.ast", buildDynamicText());
+	writeFile(dynamicFilePath, buildDynamicText());
 end
 
 local writeStaticFile = function()
-	writeFile("staticTelemetry.ast", buildStaticText());
+	writeFile(staticFilePath, buildStaticText());
 end
 
 function FSTelemetry:update(dt)	

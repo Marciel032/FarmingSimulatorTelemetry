@@ -17,14 +17,18 @@ namespace FarmingSimulatorTelemetria.Demo
         public Form1()
         {
             InitializeComponent();
+            var telemetryReader = new FSTelemetryReader();
+            telemetryReader.OnTelemetryRead += TelemetryReader_OnTelemetryRead;
+            telemetryReader.Start();
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
         {
-            if (!new FSLeitorTelemetria().ObterTelemetria(out var telemetria))
-                return;
-
-            richTextBox1.Text = JsonConvert.SerializeObject(telemetria, Formatting.Indented);
+            var texto = JsonConvert.SerializeObject(telemetry, Formatting.Indented);
+            richTextBox1.BeginInvoke((MethodInvoker)delegate ()
+            {
+                richTextBox1.Text = texto;
+            });
         }
     }
 }

@@ -41,8 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FSLeitorTelemetria.cs" />
-    <Compile Include="FSTelemetria.cs" />
+    <Compile Include="FSTelemetryReader.cs" />
+    <Compile Include="FSTelemetry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
