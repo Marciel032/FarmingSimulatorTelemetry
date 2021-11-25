@@ -17,7 +17,7 @@ namespace FarmingSimulatorTelemetria.Demo
         public Form1()
         {
             InitializeComponent();
-            var telemetryReader = new FSTelemetryReader();
+            var telemetryReader = new FSTelemetryReader(@"D:\Programas\Jogos\FarmingSimulator19");
             telemetryReader.OnTelemetryRead += TelemetryReader_OnTelemetryRead;
             telemetryReader.Start();
         }
