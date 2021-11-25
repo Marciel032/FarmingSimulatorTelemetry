@@ -17,6 +17,8 @@ The project is still under development and future updates will focus on the foll
 - [ ] Support to FS22.
 - [ ] Read control cruise data.
 - [ ] Read buy and sell price from vehicle.
+- [ ] Create field indicate if is in vehicle
+- [ ] Improve de mod icon
 
 ## 💻 Prerequisites
 
@@ -44,6 +46,26 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
     ...
 }
 ```
+
+## 💾 Current data available
+
+### Vehicle
+* Name 
+* Wear 
+* OperationTime 
+* Speed 
+* FuelMax 
+* Fuel 
+* RPMMax 
+* RPM 
+* IsEngineStarted 
+* Gear 
+* IsLightOn 
+* IsHighLightOn 
+* IsLightTurnRightOn 
+* IsLightTurnLeftOn 
+* IsLightHazardOn
+* IsWiperOn
 
 ## 📫 Contributing to the project
 To contribute, follow these steps:
