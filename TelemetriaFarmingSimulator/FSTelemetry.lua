@@ -107,7 +107,9 @@ function FSTelemetry:update(dt)
 		if drivingVehicle then
 			local specMotorized = vehicle.spec_motorized;
 			if specMotorized ~= nil then
-				dynamicTelemetry.IsMotorStarted = specMotorized.isMotorStarted;				
+				dynamicTelemetry.IsMotorStarted = specMotorized.isMotorStarted;		
+				--specMotorized.motorFan.enabled	
+				--specMotorized.motorTemperature.value	
 			end;
 
 			staticTelemetry.Name = vehicle:getName();
@@ -195,7 +197,7 @@ function FSTelemetry:update(dt)
 				dynamicTelemetry.IsCruiseControlOn = specDrivable.cruiseControl.state ~= Drivable.CRUISECONTROL_STATE_OFF;
 				dynamicTelemetry.CruiseControlSpeed = specDrivable.cruiseControl.speed;
 				staticTelemetry.CruiseControlMaxSpeed = specDrivable.cruiseControl.maxSpeed;
-				
+
 				dynamicTelemetry.IsHandBrakeOn = specDrivable.doHandbrake;
 			end
 
