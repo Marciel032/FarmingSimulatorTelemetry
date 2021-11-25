@@ -32,6 +32,7 @@ local clearTelemetry = function()
 	dynamicTelemetry.IsWipersOn = false;
 	dynamicTelemetry.IsCruiseControlOn = false;
 	dynamicTelemetry.CruiseControlSpeed = 0;
+	dynamicTelemetry.IsHandBrakeOn = false;
 end
 
 local addText = function(text, value)
@@ -62,6 +63,7 @@ local buildDynamicText = function()
 	text = addText(text, tostring(dynamicTelemetry.IsWipersOn));
 	text = addText(text, tostring(dynamicTelemetry.IsCruiseControlOn));
 	text = addText(text, formatNumber(dynamicTelemetry.CruiseControlSpeed));
+	text = addText(text, tostring(dynamicTelemetry.IsHandBrakeOn));
 	return text;
 end 
 
@@ -105,7 +107,7 @@ function FSTelemetry:update(dt)
 		if drivingVehicle then
 			local specMotorized = vehicle.spec_motorized;
 			if specMotorized ~= nil then
-				dynamicTelemetry.IsMotorStarted = specMotorized.isMotorStarted;
+				dynamicTelemetry.IsMotorStarted = specMotorized.isMotorStarted;				
 			end;
 
 			staticTelemetry.Name = vehicle:getName();
@@ -193,6 +195,8 @@ function FSTelemetry:update(dt)
 				dynamicTelemetry.IsCruiseControlOn = specDrivable.cruiseControl.state ~= Drivable.CRUISECONTROL_STATE_OFF;
 				dynamicTelemetry.CruiseControlSpeed = specDrivable.cruiseControl.speed;
 				staticTelemetry.CruiseControlMaxSpeed = specDrivable.cruiseControl.maxSpeed;
+				
+				dynamicTelemetry.IsHandBrakeOn = specDrivable.doHandbrake;
 			end
 
 			writeDynamicFile();

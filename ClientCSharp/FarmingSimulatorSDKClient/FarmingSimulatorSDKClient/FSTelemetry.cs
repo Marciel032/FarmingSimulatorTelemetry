@@ -28,5 +28,6 @@ namespace FarmingSimulatorSDKClient
         public bool IsCruiseControlOn { get; set; }
         public int CruiseControlSpeed { get; set; }
         public int CruiseControlMaxSpeed { get; set; }
+        public bool IsHandBreakeOn { get; set; }
     }
 }

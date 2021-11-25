@@ -101,7 +101,7 @@ namespace FarmingSimulatorSDKClient
                 return false;
 
             var contents = dynamicContent.Split(';');
-            if (contents.Length < 16)
+            if (contents.Length < 17)
                 return false;
 
             telemetria.Wear = ConverterDecimal(contents[0]);
@@ -119,6 +119,7 @@ namespace FarmingSimulatorSDKClient
             telemetria.IsWiperOn = ConverterBooleano(contents[12]);
             telemetria.IsCruiseControlOn = ConverterBooleano(contents[13]);
             telemetria.CruiseControlSpeed = ConverterInteiro(contents[14]);
+            telemetria.IsHandBreakeOn = ConverterBooleano(contents[15]);
 
             lastWriteDynamicFile = writeTime;            
             return true;
