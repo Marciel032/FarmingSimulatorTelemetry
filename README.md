@@ -44,7 +44,16 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 }
 ```
 
-### 📘 Giants [SDK](https://gdn.giants-software.com/documentation.php)
+## 📫 Contributing to the project
+To contribute, follow these steps:
+
+1. Fork this repository.
+2. Create a branch.
+3. Make your changes and commit them.
+4. Send to original branch.
+5. Create the pull request to dev branch.
+
+Alternatively, see the GitHub documentation at [como criar uma solicitação pull](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
 
 
 ## 🤝 Colaboradores
@@ -63,3 +72,5 @@ We thank the following people who contributed to this project:
     </td>    
   </tr>
 </table>
+
+### 📘 Giants [SDK](https://gdn.giants-software.com/documentation.php)
