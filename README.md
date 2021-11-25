@@ -52,7 +52,7 @@ To contribute, follow these steps:
 2. Create a branch.
 3. Make your changes and commit them.
 4. Send to original branch.
-5. Create the pull request to dev branch.
+5. Create the pull request.
 
 Alternatively, see the GitHub documentation at [how to create a pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
 
