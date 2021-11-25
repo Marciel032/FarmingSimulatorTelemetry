@@ -19,11 +19,11 @@ namespace FarmingSimulatorSDKClient
 
         public event OnTelemetryRead OnTelemetryRead;
 
-        public FSTelemetryReader()
+        public FSTelemetryReader(string pathMainExecutable)
         {
-            //var pathTelemetryFiles = Path.GetTempPath();
-            dynamicFilePath = Path.Combine(@"C:\Users\marci\Documents\My Games\FarmingSimulator2019\mods\TelemetriaFarmingSimulator", "dynamicTelemetry.sim");
-            staticFilePath = Path.Combine(@"C:\Users\marci\Documents\My Games\FarmingSimulator2019\mods\TelemetriaFarmingSimulator", "staticTelemetry.sim");
+            var pathFiles = GetMainDirectory(pathMainExecutable);
+            dynamicFilePath = Path.Combine(pathFiles, "dynamicTelemetry.sim");
+            staticFilePath = Path.Combine(pathFiles, "staticTelemetry.sim");
 
             telemetry = new FSTelemetry();
 
@@ -177,6 +177,13 @@ namespace FarmingSimulatorSDKClient
                 return resultado;
 
             return false;
+        }
+
+        private string GetMainDirectory(string caminhoExecutavelPrincipal) {
+            var directory = Path.GetDirectoryName(caminhoExecutavelPrincipal);
+            if (directory.EndsWith("x64") || directory.EndsWith("x32"))
+                directory = Path.GetDirectoryName(directory);
+            return directory;
         }
     }
 }
