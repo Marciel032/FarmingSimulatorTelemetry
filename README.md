@@ -2,8 +2,9 @@
 
 ![GitHub code size](https://img.shields.io/github/languages/code-size/marciel032/FarmingSimulatorTelemetry?style=for-the-badge)
 ![GitHub forks](https://img.shields.io/github/forks/marciel032/FarmingSimulatorTelemetry?style=for-the-badge)
-![Bitbucket open issues](https://img.shields.io/bitbucket/issues/marciel032/FarmingSimulatorTelemetry?style=for-the-badge)
-![Bitbucket open pull requests](https://img.shields.io/bitbucket/pr-raw/marciel032/FarmingSimulatorTelemetry?style=for-the-badge)
+![GitHub open pull requests](https://img.shields.io/github/issues-pr/Marciel032/farmingsimulatortelemetry?style=for-the-badge)
+![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed-raw/marciel032/farmingsimulatortelemetry?style=for-the-badge)
+![GitHub contributors](https://img.shields.io/github/contributors/marciel032/farmingsimulatortelemetry?style=for-the-badge)
 
 
 > This mod allows reading data from farming simulator vehicles
@@ -53,7 +54,7 @@ To contribute, follow these steps:
 4. Send to original branch.
 5. Create the pull request to dev branch.
 
-Alternatively, see the GitHub documentation at [como criar uma solicitação pull](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
+Alternatively, see the GitHub documentation at [how to create a pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
 
 
 ## 🤝 Colaboradores
