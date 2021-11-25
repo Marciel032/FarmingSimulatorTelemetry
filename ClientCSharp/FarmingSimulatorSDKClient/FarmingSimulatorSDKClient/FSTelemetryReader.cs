@@ -21,9 +21,9 @@ namespace FarmingSimulatorSDKClient
 
         public FSTelemetryReader()
         {
-            var pathTelemetryFiles = Path.GetTempPath();
-            dynamicFilePath = Path.Combine(pathTelemetryFiles, "dynamicTelemetry.sim");
-            staticFilePath = Path.Combine(pathTelemetryFiles, "staticTelemetry.sim");
+            //var pathTelemetryFiles = Path.GetTempPath();
+            dynamicFilePath = Path.Combine(@"C:\Users\marci\Documents\My Games\FarmingSimulator2019\mods\TelemetriaFarmingSimulator", "dynamicTelemetry.sim");
+            staticFilePath = Path.Combine(@"C:\Users\marci\Documents\My Games\FarmingSimulator2019\mods\TelemetriaFarmingSimulator", "staticTelemetry.sim");
 
             telemetry = new FSTelemetry();
 

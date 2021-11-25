@@ -5,8 +5,8 @@ local currentRefreshInterval = 0;
 local drivingVehicleLastState = false;
 local nameLastState = "";
 
-local dynamicFilePath = Utils.getFilename("dynamicTelemetry.sim", g_currentModDirectory);
-local staticFilePath = Utils.getFilename("staticTelemetry.sim", g_currentModDirectory);
+--local dynamicFilePath = Utils.getFilename("dynamicTelemetry.sim", g_currentModDirectory);
+--local staticFilePath = Utils.getFilename("staticTelemetry.sim", g_currentModDirectory);
 
 local dynamicTelemetry = {}
 local staticTelemetry = {}
@@ -76,12 +76,11 @@ local writeFile = function(name, content)
 end
 
 local writeDynamicFile = function()
-	writeFile(dynamicFilePath, buildDynamicText());
+	writeFile("dynamicTelemetry.sim", buildDynamicText());
 end
 
 local writeStaticFile = function()
-	print(buildStaticText());
-	writeFile(staticFilePath, buildStaticText());
+	writeFile("staticTelemetry.sim", buildStaticText());
 end
 
 clearTelemetry();

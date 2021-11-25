@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="40">
     <author>Analogic SIM X</author>
-	<authorContact>Analogic SIM X</authorContact>
+	<authorContact>marciel.pz@hotmail.com</authorContact>
     <version>1.0.0.0</version>
     <title>
-        <en>Teste</en>
+        <en>Telemetry exporter</en>
     </title>
     <description>
-        <en><![CDATA[Teste]]></en>
+        <en><![CDATA[Export telemetry to files]]></en>
     </description>
     <iconFilename>FSTelemetryLogo.dds</iconFilename>
     <multiplayer supported="true" />
