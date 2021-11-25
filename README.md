@@ -17,6 +17,8 @@ The project is still under development and future updates will focus on the foll
 - [ ] Support to FS22.
 - [ ] Read control cruise data.
 - [ ] Read buy and sell price from vehicle.
+- [ ] Create field indicate if is in vehicle
+- [ ] Improve de mod icon
 
 ## 💻 Prerequisites
 
