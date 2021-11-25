@@ -53,7 +53,7 @@ To contribute, follow these steps:
 4. Send to original branch.
 5. Create the pull request to dev branch.
 
-Alternatively, see the GitHub documentation at [como criar uma solicitação pull](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
+Alternatively, see the GitHub documentation at [how to create a pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
 
 
 ## 🤝 Colaboradores
