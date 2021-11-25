@@ -45,6 +45,26 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 }
 ```
 
+## 💾 Current data available
+
+### Vehicle
+* Name 
+* Wear 
+* OperationTime 
+* Speed 
+* FuelMax 
+* Fuel 
+* RPMMax 
+* RPM 
+* IsEngineStarted 
+* Gear 
+* IsLightOn 
+* IsHighLightOn 
+* IsLightTurnRightOn 
+* IsLightTurnLeftOn 
+* IsLightHazardOn
+* IsWiperOn
+
 ## 📫 Contributing to the project
 To contribute, follow these steps:
 
