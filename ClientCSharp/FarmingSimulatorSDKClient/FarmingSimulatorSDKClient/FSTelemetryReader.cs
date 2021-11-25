@@ -101,7 +101,7 @@ namespace FarmingSimulatorSDKClient
                 return false;
 
             var contents = dynamicContent.Split(';');
-            if (contents.Length < 14)
+            if (contents.Length < 16)
                 return false;
 
             telemetria.Wear = ConverterDecimal(contents[0]);
@@ -117,6 +117,8 @@ namespace FarmingSimulatorSDKClient
             telemetria.IsLightTurnLeftOn = ConverterBooleano(contents[10]);
             telemetria.IsLightHazardOn = ConverterBooleano(contents[11]);
             telemetria.IsWiperOn = ConverterBooleano(contents[12]);
+            telemetria.IsCruiseControlOn = ConverterBooleano(contents[13]);
+            telemetria.CruiseControlSpeed = ConverterInteiro(contents[14]);
 
             lastWriteDynamicFile = writeTime;            
             return true;
@@ -138,12 +140,13 @@ namespace FarmingSimulatorSDKClient
                 return false;
 
             var contents = dynamicContent.Split(';');
-            if (contents.Length < 4)
+            if (contents.Length < 5)
                 return false;
 
             telemetria.Name = contents[0];
             telemetria.FuelMax = ConverterDecimal(contents[1]);
             telemetria.RPMMax = ConverterInteiro(contents[2]);
+            telemetria.CruiseControlMaxSpeed = ConverterInteiro(contents[3]);
 
             lastWriteStaticFile = writeTime;
             return true;
