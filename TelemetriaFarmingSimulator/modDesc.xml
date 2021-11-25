@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="40">
-    <author>Analogic SIM X</author>
-	<authorContact>marciel.pz@hotmail.com</authorContact>
+    <author>Marciel032</author>
+    <authorContact>https://github.com/Marciel032</authorContact>
     <version>1.0.0.0</version>
     <title>
         <en>Telemetry exporter</en>
