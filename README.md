@@ -2,7 +2,7 @@
 
 ![GitHub code size](https://img.shields.io/github/languages/code-size/marciel032/FarmingSimulatorTelemetry?style=for-the-badge)
 ![GitHub forks](https://img.shields.io/github/forks/marciel032/FarmingSimulatorTelemetry?style=for-the-badge)
-![GitHub open pull requests](https://img.shields.io/github/issues-pr/Marciel032/farmingsimulatortelemetry?style=for-the-badge)
+![GitHub pull requests](https://img.shields.io/github/issues-pr-raw/marciel032/farmingsimulatortelemetry?style=for-the-badge)
 ![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed-raw/marciel032/farmingsimulatortelemetry?style=for-the-badge)
 ![GitHub contributors](https://img.shields.io/github/contributors/marciel032/farmingsimulatortelemetry?style=for-the-badge)
 
