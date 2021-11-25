@@ -10,6 +10,7 @@ namespace FarmingSimulatorSDKClient
     {
         public string Name { get; set; }
         public decimal Wear { get; set; }
+        //TODO - convert this to timestamp, current value is miliseconds
         public long OperationTime { get; set; }
         public int Speed { get; set; }
         public decimal FuelMax { get; set; }
