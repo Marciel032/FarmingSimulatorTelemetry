@@ -177,6 +177,11 @@ function FSTelemetry:ProcessGameData()
 		end
 
 		gameTelemetry.DayTimeMinutes = environment.dayTime / (1000 * 60);
+
+		local sixHours = 6 * 60 * 60 * 1000
+		local dayPlus6h, timePlus6h = environment:getDayAndDayTime(environment.dayTime + sixHours, environment.currentDay)
+		gameTelemetry.WeatherCurrent = environment.weather:getWeatherTypeAtTime(environment.currentDay, environment.dayTime)
+		gameTelemetry.WeatherNext = environment.weather:getWeatherTypeAtTime(dayPlus6h, timePlus6h)
 	end
 end
 
@@ -210,6 +215,8 @@ function FSTelemetry:ClearGameTelemetry()
 	gameTelemetry.TemperatureMax = 0.0;
 	gameTelemetry.TempetatureTrend = 0;
 	gameTelemetry.DayTimeMinutes = 0;
+	gameTelemetry.WeatherCurrent = 0;
+	gameTelemetry.WeatherNext = 0;
 end
 
 function  FSTelemetry:BuildVehicleStaticText()
@@ -246,6 +253,8 @@ function FSTelemetry:BuildGameText()
 	text = FSTelemetry:AddTextDecimal(gameTelemetry.TemperatureMax, text);
 	text = FSTelemetry:AddTextNumber(gameTelemetry.TempetatureTrend, text);
 	text = FSTelemetry:AddTextNumber(gameTelemetry.DayTimeMinutes, text);
+	text = FSTelemetry:AddTextNumber(gameTelemetry.WeatherCurrent, text);
+	text = FSTelemetry:AddTextNumber(gameTelemetry.WeatherNext, text);
 	return text;
 end
 

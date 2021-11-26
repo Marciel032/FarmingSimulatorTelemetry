@@ -89,14 +89,16 @@ namespace FarmingSimulatorSDKClient
                 return true;
 
             var contents = content.Split(';');
-            if (contents.Length < 6)
+            if (contents.Length < 8)
                 return false;
 
             gameTelemetry.Money = ConvertDecimal(contents[0]);
             gameTelemetry.TemperatureMin = ConvertDecimal(contents[1]);
             gameTelemetry.TemperatureMax = ConvertDecimal(contents[2]);
-            gameTelemetry.TemperatureTrend = (TemperatureTrendType)ConvertDecimal(contents[3]);
+            gameTelemetry.TemperatureTrend = (TemperatureTrendType)ConvertInteger(contents[3]);
             gameTelemetry.DayTimeMinutes = ConvertInteger(contents[4]);
+            gameTelemetry.WeatherCurrent = (WeatherType)ConvertInteger(contents[5]);
+            gameTelemetry.WeatherNext = (WeatherType)ConvertInteger(contents[6]);
             return true;
         }
 

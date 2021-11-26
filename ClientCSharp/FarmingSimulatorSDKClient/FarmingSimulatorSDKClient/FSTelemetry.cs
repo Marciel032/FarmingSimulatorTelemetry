@@ -24,6 +24,13 @@ namespace FarmingSimulatorSDKClient
         Dropping = 1
     }
 
+    public enum WeatherType : short
+    {
+        Sun = 1,
+        Rain = 2,
+        Cloud = 3
+    }
+
     public class GameTelemetry
     {
         public decimal Money { get; set; }
@@ -31,6 +38,8 @@ namespace FarmingSimulatorSDKClient
         public decimal TemperatureMax { get; set; }
         public TemperatureTrendType TemperatureTrend { get; set; }
         public int DayTimeMinutes { get; set; }
+        public WeatherType WeatherCurrent { get; set; }
+        public WeatherType WeatherNext { get; set; }
     }
 
     public class VehicleTelemetry
