@@ -15,7 +15,7 @@ The project is still under development and future updates will focus on the foll
 
 - [x] Support to FS19.
 - [ ] Support to FS22.
-- [ ] Read control cruise data.
+- [x] Read control cruise data.
 - [ ] Read buy and sell price from vehicle.
 - [ ] Create field indicate if is in vehicle
 - [ ] Improve de mod icon
@@ -66,6 +66,10 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * IsLightTurnLeftOn 
 * IsLightHazardOn
 * IsWiperOn
+* IsCruiseControlOn
+* CruiseControlSpeed
+* CruiseControlMaxSpeed
+* IsHandBreakeOn
 
 ## 📫 Contributing to the project
 To contribute, follow these steps:

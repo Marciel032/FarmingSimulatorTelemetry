@@ -15,6 +15,7 @@ local clearTelemetry = function()
 	staticTelemetry.Name = "";
 	staticTelemetry.FuelMax = 0.0;
 	staticTelemetry.RPMMax = 0;
+	staticTelemetry.CruiseControlMaxSpeed = 0;
 
 	dynamicTelemetry.Wear = 0.0;
 	dynamicTelemetry.OperationTime = 0;
@@ -29,6 +30,9 @@ local clearTelemetry = function()
 	dynamicTelemetry.IsLightTurnLeftOn = false;
 	dynamicTelemetry.IsLightHazardOn = false;	
 	dynamicTelemetry.IsWipersOn = false;
+	dynamicTelemetry.IsCruiseControlOn = false;
+	dynamicTelemetry.CruiseControlSpeed = 0;
+	dynamicTelemetry.IsHandBrakeOn = false;
 end
 
 local addText = function(text, value)
@@ -57,6 +61,9 @@ local buildDynamicText = function()
 	text = addText(text, tostring(dynamicTelemetry.IsLightTurnLeftOn));
 	text = addText(text, tostring(dynamicTelemetry.IsLightHazardOn));
 	text = addText(text, tostring(dynamicTelemetry.IsWipersOn));
+	text = addText(text, tostring(dynamicTelemetry.IsCruiseControlOn));
+	text = addText(text, formatNumber(dynamicTelemetry.CruiseControlSpeed));
+	text = addText(text, tostring(dynamicTelemetry.IsHandBrakeOn));
 	return text;
 end 
 
@@ -64,6 +71,7 @@ local buildStaticText = function()
 	local text = addText("", staticTelemetry.Name)
 	text = addText(text, formatDecimal(staticTelemetry.FuelMax));
 	text = addText(text, formatNumber(staticTelemetry.RPMMax));
+	text = addText(text, formatNumber(staticTelemetry.CruiseControlMaxSpeed));
 	return text;
 end 
 
@@ -99,7 +107,9 @@ function FSTelemetry:update(dt)
 		if drivingVehicle then
 			local specMotorized = vehicle.spec_motorized;
 			if specMotorized ~= nil then
-				dynamicTelemetry.IsMotorStarted = specMotorized.isMotorStarted;
+				dynamicTelemetry.IsMotorStarted = specMotorized.isMotorStarted;		
+				--specMotorized.motorFan.enabled	
+				--specMotorized.motorTemperature.value	
 			end;
 
 			staticTelemetry.Name = vehicle:getName();
@@ -177,10 +187,23 @@ function FSTelemetry:update(dt)
 						end
 					end
 				end
-			end;			
-			writeDynamicFile();
-			--Just write static file when player change the vehicle
+			end;	
 			
+			local specDrivable = vehicle.spec_drivable;
+			if specDrivable ~= nil then
+				--Drivable.CRUISECONTROL_STATE_OFF
+				--Drivable.CRUISECONTROL_STATE_ACTIVE
+				--Drivable.CRUISECONTROL_STATE_FULL
+				dynamicTelemetry.IsCruiseControlOn = specDrivable.cruiseControl.state ~= Drivable.CRUISECONTROL_STATE_OFF;
+				dynamicTelemetry.CruiseControlSpeed = specDrivable.cruiseControl.speed;
+				staticTelemetry.CruiseControlMaxSpeed = specDrivable.cruiseControl.maxSpeed;
+
+				dynamicTelemetry.IsHandBrakeOn = specDrivable.doHandbrake;
+			end
+
+			writeDynamicFile();
+
+			--Just write static file when player change the vehicle			
 			if nameLastState ~= staticTelemetry.Name then
 				writeStaticFile();
 			end			

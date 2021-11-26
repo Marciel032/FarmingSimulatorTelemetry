@@ -101,7 +101,7 @@ namespace FarmingSimulatorSDKClient
                 return false;
 
             var contents = dynamicContent.Split(';');
-            if (contents.Length < 14)
+            if (contents.Length < 17)
                 return false;
 
             telemetria.Wear = ConverterDecimal(contents[0]);
@@ -117,6 +117,9 @@ namespace FarmingSimulatorSDKClient
             telemetria.IsLightTurnLeftOn = ConverterBooleano(contents[10]);
             telemetria.IsLightHazardOn = ConverterBooleano(contents[11]);
             telemetria.IsWiperOn = ConverterBooleano(contents[12]);
+            telemetria.IsCruiseControlOn = ConverterBooleano(contents[13]);
+            telemetria.CruiseControlSpeed = ConverterInteiro(contents[14]);
+            telemetria.IsHandBreakeOn = ConverterBooleano(contents[15]);
 
             lastWriteDynamicFile = writeTime;            
             return true;
@@ -138,12 +141,13 @@ namespace FarmingSimulatorSDKClient
                 return false;
 
             var contents = dynamicContent.Split(';');
-            if (contents.Length < 4)
+            if (contents.Length < 5)
                 return false;
 
             telemetria.Name = contents[0];
             telemetria.FuelMax = ConverterDecimal(contents[1]);
             telemetria.RPMMax = ConverterInteiro(contents[2]);
+            telemetria.CruiseControlMaxSpeed = ConverterInteiro(contents[3]);
 
             lastWriteStaticFile = writeTime;
             return true;
@@ -180,10 +184,12 @@ namespace FarmingSimulatorSDKClient
         }
 
         private string GetMainDirectory(string caminhoExecutavelPrincipal) {
-            var directory = Path.GetDirectoryName(caminhoExecutavelPrincipal);
-            if (directory.EndsWith("x64") || directory.EndsWith("x32"))
-                directory = Path.GetDirectoryName(directory);
-            return directory;
+            if(caminhoExecutavelPrincipal.EndsWith(".exe"))
+                caminhoExecutavelPrincipal = Path.GetDirectoryName(caminhoExecutavelPrincipal);
+
+            if (caminhoExecutavelPrincipal.EndsWith("x64") || caminhoExecutavelPrincipal.EndsWith("x32"))
+                caminhoExecutavelPrincipal = Path.GetDirectoryName(caminhoExecutavelPrincipal);
+            return caminhoExecutavelPrincipal;
         }
     }
 }
