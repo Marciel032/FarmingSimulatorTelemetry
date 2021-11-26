@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -8,12 +9,9 @@ namespace FarmingSimulatorSDKClient
 {
     public delegate void OnTelemetryRead(FSTelemetry telemetry);
     public class FSTelemetryReader
-    {
-        private readonly string dynamicFilePath;
-        private readonly string staticFilePath;      
+    {     
         private Timer timer;
-        private DateTime lastWriteStaticFile = DateTime.MinValue;
-        private DateTime lastWriteDynamicFile = DateTime.MinValue;
+        private Dictionary<FSFileType, FSTelemetryFileInfo> files;
         private FSTelemetry telemetry;
         private bool timerEnabled;
 
@@ -22,8 +20,10 @@ namespace FarmingSimulatorSDKClient
         public FSTelemetryReader(string pathMainExecutable)
         {
             var pathFiles = GetMainDirectory(pathMainExecutable);
-            dynamicFilePath = Path.Combine(pathFiles, "dynamicTelemetry.sim");
-            staticFilePath = Path.Combine(pathFiles, "staticTelemetry.sim");
+            files = new Dictionary<FSFileType, FSTelemetryFileInfo>();
+            files.Add(FSFileType.VehicleStatic, new FSTelemetryFileInfo(Path.Combine(pathFiles, "vehicleStaticTelemetry.sim")));            
+            files.Add(FSFileType.VehicleDynamic, new FSTelemetryFileInfo(Path.Combine(pathFiles, "vehicleDynamicTelemetry.sim")));            
+            files.Add(FSFileType.Game, new FSTelemetryFileInfo(Path.Combine(pathFiles, "gameTelemetry.sim")));
 
             telemetry = new FSTelemetry();
 
@@ -40,13 +40,13 @@ namespace FarmingSimulatorSDKClient
         {
             try
             {
-                if (!ProcessDynamicTelemetry(telemetry, out var hasChangesDynamic))
+                if (!ReadVehicleTelemetry(telemetry.Vehicle, out var hasVehicleChanges))
                     return;
 
-                if (!ProcessStaticTelemetry(telemetry, out var hasChangesStatic))
+                if (!ReadGameTelemetry(telemetry.Game, out var hasGameChanges))
                     return;
 
-                if(hasChangesDynamic || hasChangesStatic)
+                if(hasVehicleChanges || hasGameChanges)
                     OnTelemetryRead?.Invoke(telemetry);
             }
             catch (Exception ex)
@@ -68,12 +68,50 @@ namespace FarmingSimulatorSDKClient
             timer.Enabled = timerEnabled;
         }
 
-        private bool GetFileContent(string fileName, out string content) {
-            content = string.Empty;
-            if (!File.Exists(fileName))
+        private bool ReadVehicleTelemetry(VehicleTelemetry vehicleTelemetry, out bool hasChanges) {
+            hasChanges = false;
+            if (!ProcessVehicleDynamicTelemetry(vehicleTelemetry, out var hasChangesDynamic))
                 return false;
 
-            using (var fileReader = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Write))
+            if (!ProcessVehicleStaticTelemetry(vehicleTelemetry, out var hasChangesStatic))
+                return false;
+
+            hasChanges = hasChangesDynamic || hasChangesStatic;
+            return true;
+        }
+
+        private bool ReadGameTelemetry(GameTelemetry gameTelemetry, out bool hasChanges)
+        {
+            if (!GetFileContent(FSFileType.Game, out var content, out hasChanges))
+                return false;
+
+            if (!hasChanges)
+                return true;
+
+            var contents = content.Split(';');
+            if (contents.Length < 2)
+                return false;
+
+            gameTelemetry.Money = ConvertDecimal(contents[0]);
+            return true;
+        }
+
+        private bool GetFileContent(FSFileType fileType, out string content, out bool hasChanges) {
+            var fileInfo = files[fileType];
+
+            hasChanges = false;
+            content = string.Empty;
+
+            if (!File.Exists(fileInfo.FilePah))
+                return false;
+
+            var writeTime = File.GetLastWriteTime(fileInfo.FilePah);
+            if (writeTime <= fileInfo.LastRead) //File was not changed after last read, so, telemetry have same data
+                return true;
+
+            hasChanges = true;            
+
+            using (var fileReader = File.Open(fileInfo.FilePah, FileMode.Open, FileAccess.Read, FileShare.Write))
             {
                 using (var stringReader = new StreamReader(fileReader, Encoding.UTF8))
                 {
@@ -81,75 +119,59 @@ namespace FarmingSimulatorSDKClient
                         return false;
 
                     content = stringReader.ReadToEnd();
+                    fileInfo.LastRead = writeTime;
                     return true;
                 }
-            }
+            }            
         }
 
-        private bool ProcessDynamicTelemetry(FSTelemetry telemetria, out bool hasChanges) {
-            hasChanges = false;
-            if (!File.Exists(dynamicFilePath))
+        private bool ProcessVehicleDynamicTelemetry(VehicleTelemetry vehicleTelemetry, out bool hasChanges) {
+            if (!GetFileContent(FSFileType.VehicleDynamic, out var content, out hasChanges))
                 return false;
 
-            var writeTime = File.GetLastWriteTime(dynamicFilePath);
-            if (writeTime <= lastWriteDynamicFile) //File was not changed after las read, so, telemetry have same data
+            if (!hasChanges)
                 return true;
 
-            hasChanges = true;
-
-            if (!GetFileContent(dynamicFilePath, out var dynamicContent))
-                return false;
-
-            var contents = dynamicContent.Split(';');
+            var contents = content.Split(';');
             if (contents.Length < 17)
                 return false;
 
-            telemetria.Wear = ConvertDecimal(contents[0]);
-            telemetria.OperationTime = ConvertLong(contents[1]);
-            telemetria.Speed = ConvertInteger(contents[2]);
-            telemetria.Fuel = ConvertDecimal(contents[3]);
-            telemetria.RPM = ConvertInteger(contents[4]);
-            telemetria.IsEngineStarted = ConvertBoolean(contents[5]);
-            telemetria.Gear = ConvertInteger(contents[6]);
-            telemetria.IsLightOn = ConvertBoolean(contents[7]);
-            telemetria.IsHighLightOn = ConvertBoolean(contents[8]);
-            telemetria.IsLightTurnRightOn = ConvertBoolean(contents[9]);
-            telemetria.IsLightTurnLeftOn = ConvertBoolean(contents[10]);
-            telemetria.IsLightHazardOn = ConvertBoolean(contents[11]);
-            telemetria.IsWiperOn = ConvertBoolean(contents[12]);
-            telemetria.IsCruiseControlOn = ConvertBoolean(contents[13]);
-            telemetria.CruiseControlSpeed = ConvertInteger(contents[14]);
-            telemetria.IsHandBreakeOn = ConvertBoolean(contents[15]);
-
-            lastWriteDynamicFile = writeTime;            
+            vehicleTelemetry.Wear = ConvertDecimal(contents[0]);
+            vehicleTelemetry.OperationTime = ConvertLong(contents[1]);
+            vehicleTelemetry.Speed = ConvertInteger(contents[2]);
+            vehicleTelemetry.Fuel = ConvertDecimal(contents[3]);
+            vehicleTelemetry.RPM = ConvertInteger(contents[4]);
+            vehicleTelemetry.IsEngineStarted = ConvertBoolean(contents[5]);
+            vehicleTelemetry.Gear = ConvertInteger(contents[6]);
+            vehicleTelemetry.IsLightOn = ConvertBoolean(contents[7]);
+            vehicleTelemetry.IsHighLightOn = ConvertBoolean(contents[8]);
+            vehicleTelemetry.IsLightTurnRightOn = ConvertBoolean(contents[9]);
+            vehicleTelemetry.IsLightTurnLeftOn = ConvertBoolean(contents[10]);
+            vehicleTelemetry.IsLightHazardOn = ConvertBoolean(contents[11]);
+            vehicleTelemetry.IsWiperOn = ConvertBoolean(contents[12]);
+            vehicleTelemetry.IsCruiseControlOn = ConvertBoolean(contents[13]);
+            vehicleTelemetry.CruiseControlSpeed = ConvertInteger(contents[14]);
+            vehicleTelemetry.IsHandBreakeOn = ConvertBoolean(contents[15]);          
             return true;
         }
 
-        private bool ProcessStaticTelemetry(FSTelemetry telemetria, out bool hasChanges)
+        private bool ProcessVehicleStaticTelemetry(VehicleTelemetry vehicleTelemetry, out bool hasChanges)
         {
-            hasChanges = false;
-            if (!File.Exists(staticFilePath))
+            if (!GetFileContent(FSFileType.VehicleStatic, out var content, out hasChanges))
                 return false;
 
-            var writeTime = File.GetLastWriteTime(staticFilePath);
-            if (writeTime <= lastWriteStaticFile) //File was not changed after las read, so, telemetry have same data
+            if (!hasChanges)
                 return true;
 
-            hasChanges = true;
-
-            if (!GetFileContent(staticFilePath, out var dynamicContent))
-                return false;
-
-            var contents = dynamicContent.Split(';');
+            var contents = content.Split(';');
             if (contents.Length < 5)
                 return false;
 
-            telemetria.Name = contents[0];
-            telemetria.FuelMax = ConvertDecimal(contents[1]);
-            telemetria.RPMMax = ConvertInteger(contents[2]);
-            telemetria.CruiseControlMaxSpeed = ConvertInteger(contents[3]);
+            vehicleTelemetry.Name = contents[0];
+            vehicleTelemetry.FuelMax = ConvertDecimal(contents[1]);
+            vehicleTelemetry.RPMMax = ConvertInteger(contents[2]);
+            vehicleTelemetry.CruiseControlMaxSpeed = ConvertInteger(contents[3]);
 
-            lastWriteStaticFile = writeTime;
             return true;
         }
 

@@ -8,6 +8,23 @@ namespace FarmingSimulatorSDKClient
 {
     public class FSTelemetry
     {
+        public VehicleTelemetry Vehicle { get; set; }
+        public GameTelemetry Game { get; set; }
+
+        public FSTelemetry()
+        {
+            Vehicle = new VehicleTelemetry();
+            Game = new GameTelemetry();
+        }
+    }
+
+    public class GameTelemetry
+    {
+        public decimal Money { get; set; }
+    }
+
+    public class VehicleTelemetry
+    {
         public string Name { get; set; }
         public decimal Wear { get; set; }
         //TODO - convert this to timestamp, current value is miliseconds
