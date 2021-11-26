@@ -62,11 +62,19 @@ end
 function FSTelemetry:ProcessVehicleData()
 	local vehicle = g_currentMission.controlledVehicle;
 
+	local movingDirection = 0.0;
 	local specMotorized = vehicle.spec_motorized;
 	if specMotorized ~= nil then
 		vehicleDynamicTelemetry.IsMotorStarted = specMotorized.isMotorStarted;		
 		--specMotorized.motorFan.enabled
 		--specMotorized.motorTemperature.value
+
+		local lastSpeed = math.max(0, vehicle:getLastSpeed() * specMotorized.speedDisplayScale)
+		vehicleDynamicTelemetry.Speed = math.floor(lastSpeed);
+		if math.abs(lastSpeed-vehicleDynamicTelemetry.Speed) > 0.5 then
+			vehicleDynamicTelemetry.Speed = vehicleDynamicTelemetry.Speed + 1;
+		end
+		movingDirection = specMotorized.movingDirection;
 	end;
 
 	vehicleStaticTelemetry.Name = vehicle:getName();
@@ -77,12 +85,6 @@ function FSTelemetry:ProcessVehicleData()
 	if vehicle.operatingTime ~= nil then
 		vehicleDynamicTelemetry.OperationTimeMinutes = vehicle.operatingTime / (1000 * 60);
 	end;
-
-	local lastSpeed = math.max(0, vehicle:getLastSpeed() * vehicle.spec_motorized.speedDisplayScale)
-	vehicleDynamicTelemetry.Speed = math.floor(lastSpeed);
-	if math.abs(lastSpeed-vehicleDynamicTelemetry.Speed) > 0.5 then
-		vehicleDynamicTelemetry.Speed = vehicleDynamicTelemetry.Speed + 1;
-	end
 
 	--TODO: GET CURRENT FILL TYPE
 	local fuelFillType = vehicle:getConsumerFillUnitIndex(FillType.DIESEL)
@@ -103,6 +105,9 @@ function FSTelemetry:ProcessVehicleData()
 			vehicleDynamicTelemetry.RPM = math.ceil(motor:getLastRealMotorRpm());
 		end		
 		vehicleDynamicTelemetry.Gear = motor.gear;
+		if movingDirection < 0 then
+			vehicleDynamicTelemetry.Gear = vehicleDynamicTelemetry.Gear * -1;
+		end
 	end;
 
 	local specLights = vehicle.spec_lights;
