@@ -184,10 +184,12 @@ namespace FarmingSimulatorSDKClient
         }
 
         private string GetMainDirectory(string caminhoExecutavelPrincipal) {
-            var directory = Path.GetDirectoryName(caminhoExecutavelPrincipal);
-            if (directory.EndsWith("x64") || directory.EndsWith("x32"))
-                directory = Path.GetDirectoryName(directory);
-            return directory;
+            if(caminhoExecutavelPrincipal.EndsWith(".exe"))
+                caminhoExecutavelPrincipal = Path.GetDirectoryName(caminhoExecutavelPrincipal);
+
+            if (caminhoExecutavelPrincipal.EndsWith("x64") || caminhoExecutavelPrincipal.EndsWith("x32"))
+                caminhoExecutavelPrincipal = Path.GetDirectoryName(caminhoExecutavelPrincipal);
+            return caminhoExecutavelPrincipal;
         }
     }
 }
