@@ -104,22 +104,22 @@ namespace FarmingSimulatorSDKClient
             if (contents.Length < 17)
                 return false;
 
-            telemetria.Wear = ConverterDecimal(contents[0]);
-            telemetria.OperationTime = ConverterLong(contents[1]);
-            telemetria.Speed = ConverterInteiro(contents[2]);
-            telemetria.Fuel = ConverterDecimal(contents[3]);
-            telemetria.RPM = ConverterInteiro(contents[4]);
-            telemetria.IsEngineStarted = ConverterBooleano(contents[5]);
-            telemetria.Gear = ConverterInteiro(contents[6]);
-            telemetria.IsLightOn = ConverterBooleano(contents[7]);
-            telemetria.IsHighLightOn = ConverterBooleano(contents[8]);
-            telemetria.IsLightTurnRightOn = ConverterBooleano(contents[9]);
-            telemetria.IsLightTurnLeftOn = ConverterBooleano(contents[10]);
-            telemetria.IsLightHazardOn = ConverterBooleano(contents[11]);
-            telemetria.IsWiperOn = ConverterBooleano(contents[12]);
-            telemetria.IsCruiseControlOn = ConverterBooleano(contents[13]);
-            telemetria.CruiseControlSpeed = ConverterInteiro(contents[14]);
-            telemetria.IsHandBreakeOn = ConverterBooleano(contents[15]);
+            telemetria.Wear = ConvertDecimal(contents[0]);
+            telemetria.OperationTime = ConvertLong(contents[1]);
+            telemetria.Speed = ConvertInteger(contents[2]);
+            telemetria.Fuel = ConvertDecimal(contents[3]);
+            telemetria.RPM = ConvertInteger(contents[4]);
+            telemetria.IsEngineStarted = ConvertBoolean(contents[5]);
+            telemetria.Gear = ConvertInteger(contents[6]);
+            telemetria.IsLightOn = ConvertBoolean(contents[7]);
+            telemetria.IsHighLightOn = ConvertBoolean(contents[8]);
+            telemetria.IsLightTurnRightOn = ConvertBoolean(contents[9]);
+            telemetria.IsLightTurnLeftOn = ConvertBoolean(contents[10]);
+            telemetria.IsLightHazardOn = ConvertBoolean(contents[11]);
+            telemetria.IsWiperOn = ConvertBoolean(contents[12]);
+            telemetria.IsCruiseControlOn = ConvertBoolean(contents[13]);
+            telemetria.CruiseControlSpeed = ConvertInteger(contents[14]);
+            telemetria.IsHandBreakeOn = ConvertBoolean(contents[15]);
 
             lastWriteDynamicFile = writeTime;            
             return true;
@@ -145,29 +145,29 @@ namespace FarmingSimulatorSDKClient
                 return false;
 
             telemetria.Name = contents[0];
-            telemetria.FuelMax = ConverterDecimal(contents[1]);
-            telemetria.RPMMax = ConverterInteiro(contents[2]);
-            telemetria.CruiseControlMaxSpeed = ConverterInteiro(contents[3]);
+            telemetria.FuelMax = ConvertDecimal(contents[1]);
+            telemetria.RPMMax = ConvertInteger(contents[2]);
+            telemetria.CruiseControlMaxSpeed = ConvertInteger(contents[3]);
 
             lastWriteStaticFile = writeTime;
             return true;
         }
 
-        private decimal ConverterDecimal(string valor) {
+        private decimal ConvertDecimal(string valor) {
             if (decimal.TryParse(valor, NumberStyles.Any, CultureInfo.GetCultureInfo("en-US"),  out var numero))
                 return numero;
 
             return 0m;
         }
 
-        private long ConverterLong(string valor) {
+        private long ConvertLong(string valor) {
             if (long.TryParse(valor, out var resultado))
                 return resultado;
 
             return 0;
         }
 
-        private int ConverterInteiro(string valor)
+        private int ConvertInteger(string valor)
         {
             if (int.TryParse(valor, out var resultado))
                 return resultado;
@@ -175,12 +175,9 @@ namespace FarmingSimulatorSDKClient
             return 0;
         }
 
-        private bool ConverterBooleano(string valor)
+        private bool ConvertBoolean(string valor)
         {
-            if (bool.TryParse(valor, out var resultado))
-                return resultado;
-
-            return false;
+            return valor.Trim() == "1";
         }
 
         private string GetMainDirectory(string caminhoExecutavelPrincipal) {

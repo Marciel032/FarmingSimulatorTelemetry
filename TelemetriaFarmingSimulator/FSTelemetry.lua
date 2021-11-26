@@ -47,23 +47,27 @@ local formatNumber = function(value)
 	return string.format("%d", value)
 end
 
+local formatBoolean= function(value)
+	return value and "1" or "0";
+end
+
 local buildDynamicText = function()
 	local text = addText("", formatDecimal(dynamicTelemetry.Wear))
 	text = addText(text, formatNumber(dynamicTelemetry.OperationTime));
 	text = addText(text, formatNumber(dynamicTelemetry.Speed));
 	text = addText(text, formatDecimal(dynamicTelemetry.Fuel));
 	text = addText(text, formatNumber(dynamicTelemetry.RPM));
-	text = addText(text, tostring(dynamicTelemetry.IsMotorStarted));
+	text = addText(text, formatBoolean(dynamicTelemetry.IsMotorStarted));
 	text = addText(text, formatNumber(dynamicTelemetry.Gear));
-	text = addText(text, tostring(dynamicTelemetry.IsLightOn));
-	text = addText(text, tostring(dynamicTelemetry.IsLightHighOn));
-	text = addText(text, tostring(dynamicTelemetry.IsLightTurnRightOn));
-	text = addText(text, tostring(dynamicTelemetry.IsLightTurnLeftOn));
-	text = addText(text, tostring(dynamicTelemetry.IsLightHazardOn));
-	text = addText(text, tostring(dynamicTelemetry.IsWipersOn));
-	text = addText(text, tostring(dynamicTelemetry.IsCruiseControlOn));
+	text = addText(text, formatBoolean(dynamicTelemetry.IsLightOn));
+	text = addText(text, formatBoolean(dynamicTelemetry.IsLightHighOn));
+	text = addText(text, formatBoolean(dynamicTelemetry.IsLightTurnRightOn));
+	text = addText(text, formatBoolean(dynamicTelemetry.IsLightTurnLeftOn));
+	text = addText(text, formatBoolean(dynamicTelemetry.IsLightHazardOn));
+	text = addText(text, formatBoolean(dynamicTelemetry.IsWipersOn));
+	text = addText(text, formatBoolean(dynamicTelemetry.IsCruiseControlOn));
 	text = addText(text, formatNumber(dynamicTelemetry.CruiseControlSpeed));
-	text = addText(text, tostring(dynamicTelemetry.IsHandBrakeOn));
+	text = addText(text, formatBoolean(dynamicTelemetry.IsHandBrakeOn));
 	return text;
 end 
 
