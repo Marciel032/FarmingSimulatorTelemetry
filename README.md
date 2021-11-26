@@ -77,6 +77,8 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * TemperatureMax
 * TemperatureTrend
 * DayTime
+* Weather Current
+* Weather Next
 
 ## 📫 Contributing to the project
 To contribute, follow these steps:
