@@ -89,10 +89,14 @@ namespace FarmingSimulatorSDKClient
                 return true;
 
             var contents = content.Split(';');
-            if (contents.Length < 2)
+            if (contents.Length < 6)
                 return false;
 
             gameTelemetry.Money = ConvertDecimal(contents[0]);
+            gameTelemetry.TemperatureMin = ConvertDecimal(contents[1]);
+            gameTelemetry.TemperatureMax = ConvertDecimal(contents[2]);
+            gameTelemetry.TemperatureTrend = (TemperatureTrendType)ConvertDecimal(contents[3]);
+            gameTelemetry.DayTimeMinutes = ConvertInteger(contents[4]);
             return true;
         }
 
@@ -137,7 +141,7 @@ namespace FarmingSimulatorSDKClient
                 return false;
 
             vehicleTelemetry.Wear = ConvertDecimal(contents[0]);
-            vehicleTelemetry.OperationTime = ConvertLong(contents[1]);
+            vehicleTelemetry.OperationTimeMinutes = ConvertLong(contents[1]);
             vehicleTelemetry.Speed = ConvertInteger(contents[2]);
             vehicleTelemetry.Fuel = ConvertDecimal(contents[3]);
             vehicleTelemetry.RPM = ConvertInteger(contents[4]);

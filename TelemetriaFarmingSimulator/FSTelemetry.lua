@@ -75,7 +75,7 @@ function FSTelemetry:ProcessVehicleData()
 	end;
 
 	if vehicle.operatingTime ~= nil then
-		vehicleDynamicTelemetry.OperationTime = vehicle.operatingTime;
+		vehicleDynamicTelemetry.OperationTimeMinutes = vehicle.operatingTime / (1000 * 60);
 	end;
 
 	local lastSpeed = math.max(0, vehicle:getLastSpeed() * vehicle.spec_motorized.speedDisplayScale)
@@ -166,6 +166,18 @@ function FSTelemetry:ProcessGameData()
 			gameTelemetry.Money = farm.money;
 		end
     end
+
+	if g_currentMission.environment ~= nil then
+		local environment = g_currentMission.environment;
+		if environment.weather ~= nil then
+			local minTemp, maxTemp = environment.weather:getCurrentMinMaxTemperatures();
+			gameTelemetry.TemperatureMin = minTemp;
+			gameTelemetry.TemperatureMax = maxTemp;
+			gameTelemetry.TempetatureTrend = environment.weather:getCurrentTemperatureTrend();
+		end
+
+		gameTelemetry.DayTimeMinutes = environment.dayTime / (1000 * 60);
+	end
 end
 
 function FSTelemetry:ClearVehicleTelemetry()
@@ -175,7 +187,7 @@ function FSTelemetry:ClearVehicleTelemetry()
 	vehicleStaticTelemetry.CruiseControlMaxSpeed = 0;
 
 	vehicleDynamicTelemetry.Wear = 0.0;
-	vehicleDynamicTelemetry.OperationTime = 0;
+	vehicleDynamicTelemetry.OperationTimeMinutes = 0;
 	vehicleDynamicTelemetry.Speed = 0;
 	vehicleDynamicTelemetry.Fuel = 0.0;
 	vehicleDynamicTelemetry.RPM = 0;
@@ -194,6 +206,10 @@ end
 
 function FSTelemetry:ClearGameTelemetry()
 	gameTelemetry.Money = 0.0;
+	gameTelemetry.TemperatureMin = 0.0;
+	gameTelemetry.TemperatureMax = 0.0;
+	gameTelemetry.TempetatureTrend = 0;
+	gameTelemetry.DayTimeMinutes = 0;
 end
 
 function  FSTelemetry:BuildVehicleStaticText()
@@ -206,7 +222,7 @@ end
 
 function FSTelemetry:BuildVehicleDynamicText()
 	local text = FSTelemetry:AddTextDecimal(vehicleDynamicTelemetry.Wear, "");
-	text = FSTelemetry:AddTextNumber(vehicleDynamicTelemetry.OperationTime, text);
+	text = FSTelemetry:AddTextNumber(vehicleDynamicTelemetry.OperationTimeMinutes, text);
 	text = FSTelemetry:AddTextNumber(vehicleDynamicTelemetry.Speed, text);
 	text = FSTelemetry:AddTextDecimal(vehicleDynamicTelemetry.Fuel, text);
 	text = FSTelemetry:AddTextNumber(vehicleDynamicTelemetry.RPM, text);
@@ -226,6 +242,10 @@ end
 
 function FSTelemetry:BuildGameText()
 	local text = FSTelemetry:AddTextDecimal(gameTelemetry.Money, "");
+	text = FSTelemetry:AddTextDecimal(gameTelemetry.TemperatureMin, text);
+	text = FSTelemetry:AddTextDecimal(gameTelemetry.TemperatureMax, text);
+	text = FSTelemetry:AddTextNumber(gameTelemetry.TempetatureTrend, text);
+	text = FSTelemetry:AddTextNumber(gameTelemetry.DayTimeMinutes, text);
 	return text;
 end
 
