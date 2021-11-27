@@ -2,7 +2,7 @@ FSTelemetry = {};
 
 local updateInterval = {
 	vehicle = 300,
-	vechicleCurrent = 0,
+	vehicleCurrent = 0,
 	game = 1000,
 	gameCurrent = 1000
 }
@@ -17,13 +17,47 @@ local dynamicVehicleTelemetrySaved = {}
 local staticVehicleTelemetrySaved = {}
 local gameTelemetrySaved = {}
 
+function FSTelemetry.ClearVehicleTelemetry()
+	vehicleStaticTelemetry.Name = "";
+	vehicleStaticTelemetry.FuelMax = 0.0;
+	vehicleStaticTelemetry.RPMMax = 0;
+	vehicleStaticTelemetry.CruiseControlMaxSpeed = 0;
+
+	vehicleDynamicTelemetry.Wear = 0.0;
+	vehicleDynamicTelemetry.OperationTimeMinutes = 0;
+	vehicleDynamicTelemetry.Speed = 0;
+	vehicleDynamicTelemetry.Fuel = 0.0;
+	vehicleDynamicTelemetry.RPM = 0;
+	vehicleDynamicTelemetry.IsMotorStarted = false;
+	vehicleDynamicTelemetry.Gear = 0;
+	vehicleDynamicTelemetry.IsLightOn = false;
+	vehicleDynamicTelemetry.IsLightHighOn = false;
+	vehicleDynamicTelemetry.IsLightTurnRightOn = false;
+	vehicleDynamicTelemetry.IsLightTurnLeftOn = false;
+	vehicleDynamicTelemetry.IsLightHazardOn = false;
+	vehicleDynamicTelemetry.IsWipersOn = false;
+	vehicleDynamicTelemetry.IsCruiseControlOn = false;
+	vehicleDynamicTelemetry.CruiseControlSpeed = 0;
+	vehicleDynamicTelemetry.IsHandBrakeOn = false;
+end
+
+function FSTelemetry.ClearGameTelemetry()
+	gameTelemetry.Money = 0.0;
+	gameTelemetry.TemperatureMin = 0.0;
+	gameTelemetry.TemperatureMax = 0.0;
+	gameTelemetry.TempetatureTrend = 0;
+	gameTelemetry.DayTimeMinutes = 0;
+	gameTelemetry.WeatherCurrent = 0;
+	gameTelemetry.WeatherNext = 0;
+end
+
 FSTelemetry:ClearVehicleTelemetry();
 FSTelemetry:ClearGameTelemetry();
 
 function FSTelemetry:update(dt)
-	updateInterval.vechicleCurrent = updateInterval.vechicleCurrent + dt;	
-	if updateInterval.vechicleCurrent >= updateInterval.vechicle then
-		updateInterval.vechicleCurrent = 0;
+	updateInterval.vehicleCurrent = updateInterval.vehicleCurrent + dt;	
+	if updateInterval.vehicleCurrent >= updateInterval.vehicle then
+		updateInterval.vehicleCurrent = 0;
 
 		local drivingVehicle = FSTelemetry:IsDrivingVehicle();
 		if drivingVehicle then
@@ -188,40 +222,6 @@ function FSTelemetry:ProcessGameData()
 		gameTelemetry.WeatherCurrent = environment.weather:getWeatherTypeAtTime(environment.currentDay, environment.dayTime)
 		gameTelemetry.WeatherNext = environment.weather:getWeatherTypeAtTime(dayPlus6h, timePlus6h)
 	end
-end
-
-function FSTelemetry:ClearVehicleTelemetry()
-	vehicleStaticTelemetry.Name = "";
-	vehicleStaticTelemetry.FuelMax = 0.0;
-	vehicleStaticTelemetry.RPMMax = 0;
-	vehicleStaticTelemetry.CruiseControlMaxSpeed = 0;
-
-	vehicleDynamicTelemetry.Wear = 0.0;
-	vehicleDynamicTelemetry.OperationTimeMinutes = 0;
-	vehicleDynamicTelemetry.Speed = 0;
-	vehicleDynamicTelemetry.Fuel = 0.0;
-	vehicleDynamicTelemetry.RPM = 0;
-	vehicleDynamicTelemetry.IsMotorStarted = false;
-	vehicleDynamicTelemetry.Gear = 0;
-	vehicleDynamicTelemetry.IsLightOn = false;
-	vehicleDynamicTelemetry.IsLightHighOn = false;
-	vehicleDynamicTelemetry.IsLightTurnRightOn = false;
-	vehicleDynamicTelemetry.IsLightTurnLeftOn = false;
-	vehicleDynamicTelemetry.IsLightHazardOn = false;
-	vehicleDynamicTelemetry.IsWipersOn = false;
-	vehicleDynamicTelemetry.IsCruiseControlOn = false;
-	vehicleDynamicTelemetry.CruiseControlSpeed = 0;
-	vehicleDynamicTelemetry.IsHandBrakeOn = false;
-end
-
-function FSTelemetry:ClearGameTelemetry()
-	gameTelemetry.Money = 0.0;
-	gameTelemetry.TemperatureMin = 0.0;
-	gameTelemetry.TemperatureMax = 0.0;
-	gameTelemetry.TempetatureTrend = 0;
-	gameTelemetry.DayTimeMinutes = 0;
-	gameTelemetry.WeatherCurrent = 0;
-	gameTelemetry.WeatherNext = 0;
 end
 
 function  FSTelemetry:BuildVehicleStaticText()
