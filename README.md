@@ -71,6 +71,15 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * CruiseControlMaxSpeed
 * IsHandBreakeOn
 
+### Game
+* Money
+* TemperatureMin
+* TemperatureMax
+* TemperatureTrend
+* DayTime
+* Weather Current
+* Weather Next
+
 ## 📫 Contributing to the project
 To contribute, follow these steps:
 

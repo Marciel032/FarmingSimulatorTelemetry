@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FSTelemetryFileInfo.cs" />
     <Compile Include="FSTelemetryReader.cs" />
     <Compile Include="FSTelemetry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
