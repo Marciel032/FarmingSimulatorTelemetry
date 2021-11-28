@@ -14,7 +14,7 @@
 The project is still under development and future updates will focus on the following tasks:
 
 - [x] Support to FS19.
-- [ ] Support to FS22.
+- [x] Support to FS22.
 - [x] Read control cruise data.
 - [ ] Read buy and sell price from vehicle.
 - [ ] Create field indicate if is in vehicle
