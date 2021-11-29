@@ -70,6 +70,8 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * CruiseControlSpeed
 * CruiseControlMaxSpeed
 * IsHandBreakeOn
+* IsDriving
+* IsAIActive
 
 ### Game
 * Money
