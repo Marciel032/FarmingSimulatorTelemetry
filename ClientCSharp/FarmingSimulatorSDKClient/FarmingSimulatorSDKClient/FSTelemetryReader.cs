@@ -170,13 +170,15 @@ namespace FarmingSimulatorSDKClient
                 return true;
 
             var contents = content.Split(';');
-            if (contents.Length < 5)
+            if (contents.Length < 7)
                 return false;
 
             vehicleTelemetry.Name = contents[0];
             vehicleTelemetry.FuelMax = ConvertDecimal(contents[1]);
             vehicleTelemetry.RPMMax = ConvertInteger(contents[2]);
             vehicleTelemetry.CruiseControlMaxSpeed = ConvertInteger(contents[3]);
+            vehicleTelemetry.IsDrivingVehicle = ConvertBoolean(contents[4]);
+            vehicleTelemetry.IsAIActive = ConvertBoolean(contents[5]);
 
             return true;
         }

@@ -22,6 +22,8 @@ function FSTelemetry.ClearVehicleTelemetry()
 	vehicleStaticTelemetry.FuelMax = 0.0;
 	vehicleStaticTelemetry.RPMMax = 0;
 	vehicleStaticTelemetry.CruiseControlMaxSpeed = 0;
+	vehicleStaticTelemetry.IsDrivingVehicle = false;
+	vehicleStaticTelemetry.IsAiActive = false;
 
 	vehicleDynamicTelemetry.Wear = 0.0;
 	vehicleDynamicTelemetry.OperationTimeMinutes = 0;
@@ -59,8 +61,8 @@ function FSTelemetry:update(dt)
 	if updateInterval.vehicleCurrent >= updateInterval.vehicle then
 		updateInterval.vehicleCurrent = 0;
 
-		local drivingVehicle = FSTelemetry:IsDrivingVehicle();
-		if drivingVehicle then
+		vehicleStaticTelemetry.IsDrivingVehicle = FSTelemetry:IsDrivingVehicle();		
+		if vehicleStaticTelemetry.IsDrivingVehicle then
 			FSTelemetry:ProcessVehicleData();
 			FSTelemetry:WriteVehicleDynamicFile();
 			FSTelemetry:WriteVehicleStaticFile();
@@ -73,7 +75,7 @@ function FSTelemetry:update(dt)
 			end
 		end;
 
-		drivingVehicleLastState = drivingVehicle;
+		drivingVehicleLastState = vehicleStaticTelemetry.IsDrivingVehicle;
 		--print(DebugUtil.printTableRecursively(g_currentMission.controlledVehicle,".",0,5));
 	end;
 
@@ -111,6 +113,12 @@ function FSTelemetry:ProcessVehicleData()
 		movingDirection = specMotorized.movingDirection;
 	end;
 
+	if vehicle.getIsAIActive ~= nil then
+		vehicleStaticTelemetry.IsAiActive = vehicle:getIsAIActive();
+	else
+		vehicleStaticTelemetry.IsAiActive = false;
+	end
+
 	vehicleStaticTelemetry.Name = vehicle:getName();
 	if vehicle.getWearTotalAmount ~= nil and vehicle:getWearTotalAmount() ~= nil then
 		vehicleDynamicTelemetry.Wear = vehicle:getWearTotalAmount();
@@ -135,7 +143,7 @@ function FSTelemetry:ProcessVehicleData()
 		if motor.getMaxRpm ~= nil then
 			vehicleStaticTelemetry.RPMMax = math.ceil(motor:getMaxRpm());
 		end	
-		if motor.getLastRealMotorRpm ~= nil and vehicleDynamicTelemetry.IsMotorStarted then
+		if motor.getLastRealMotorRpm ~= nil then
 			vehicleDynamicTelemetry.RPM = math.ceil(motor:getLastRealMotorRpm());
 		end		
 		vehicleDynamicTelemetry.Gear = motor.gear;
@@ -229,6 +237,8 @@ function  FSTelemetry:BuildVehicleStaticText()
 	text = FSTelemetry:AddTextDecimal(vehicleStaticTelemetry.FuelMax, text);
 	text = FSTelemetry:AddTextNumber(vehicleStaticTelemetry.RPMMax, text);
 	text = FSTelemetry:AddTextNumber(vehicleStaticTelemetry.CruiseControlMaxSpeed, text);
+	text = FSTelemetry:AddTextBoolean(vehicleStaticTelemetry.IsDrivingVehicle, text);
+	text = FSTelemetry:AddTextBoolean(vehicleStaticTelemetry.IsAiActive, text);
 	return text;
 end 
 

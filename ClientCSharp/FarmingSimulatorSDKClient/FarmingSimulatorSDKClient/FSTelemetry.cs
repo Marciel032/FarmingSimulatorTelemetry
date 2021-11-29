@@ -14,7 +14,7 @@ namespace FarmingSimulatorSDKClient
         public FSTelemetry()
         {
             Vehicle = new VehicleTelemetry();
-            Game = new GameTelemetry();
+            Game = new GameTelemetry();            
         }
     }
 
@@ -65,5 +65,12 @@ namespace FarmingSimulatorSDKClient
         public int CruiseControlSpeed { get; set; }
         public int CruiseControlMaxSpeed { get; set; }
         public bool IsHandBreakeOn { get; set; }
+        public bool IsDrivingVehicle { get; set; }
+        public bool IsAIActive { get; set; }
+
+        public VehicleTelemetry()
+        {
+            Name = string.Empty;
+        }
     }
 }
