@@ -32,6 +32,7 @@ namespace FarmingSimulatorTelemetria.Demo
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.buttonStart = new System.Windows.Forms.Button();
             this.buttonStop = new System.Windows.Forms.Button();
+            this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // richTextBox1
@@ -41,7 +42,7 @@ namespace FarmingSimulatorTelemetria.Demo
             | System.Windows.Forms.AnchorStyles.Right)));
             this.richTextBox1.Location = new System.Drawing.Point(12, 46);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(776, 392);
+            this.richTextBox1.Size = new System.Drawing.Size(776, 374);
             this.richTextBox1.TabIndex = 0;
             this.richTextBox1.Text = "";
             // 
@@ -65,17 +66,28 @@ namespace FarmingSimulatorTelemetria.Demo
             this.buttonStop.UseVisualStyleBackColor = true;
             this.buttonStop.Click += new System.EventHandler(this.buttonStop_Click);
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 428);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(372, 13);
+            this.label1.TabIndex = 5;
+            this.label1.Text = "If your game is opened with admin rights, open this demo with admin rights too";
+            // 
             // FarmingSimulatorTelemetry
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.buttonStop);
             this.Controls.Add(this.buttonStart);
             this.Controls.Add(this.richTextBox1);
             this.Name = "FarmingSimulatorTelemetry";
             this.Text = "Farming Simulator Telemetry";
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -84,6 +96,7 @@ namespace FarmingSimulatorTelemetria.Demo
         private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.Button buttonStart;
         private System.Windows.Forms.Button buttonStop;
+        private System.Windows.Forms.Label label1;
     }
 }
 

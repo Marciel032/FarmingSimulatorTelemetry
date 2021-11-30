@@ -396,7 +396,7 @@ function FSTelemetry:AddTextBoolean(value, text)
 end
 
 function FSTelemetry:AddText(value, text)
-	return text .. value .. ";";
+	return text .. value .. "§";
 end
 
 function FSTelemetry:WriteTelemetry()

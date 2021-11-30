@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Timers;
@@ -16,18 +17,25 @@ namespace FarmingSimulatorSDKClient
     {
         private FSTelemetry telemetry;
         private PipeServer pipeServer;
-        public event OnTelemetryRead OnTelemetryRead;
+        private Dictionary<string, PropertyInfo> telemetryProperties;
+        private Dictionary<short, PropertyInfo> telemetryIndexes;
+        public event OnTelemetryRead OnTelemetryRead;        
 
         public FSTelemetryReader()
         {
             telemetry = new FSTelemetry();
+            InitializeTelemetryProperties();
+            telemetryIndexes = new Dictionary<short, PropertyInfo>();
             pipeServer = new PipeServer("fssimx");
             pipeServer.MessageReceivedEvent += OnTelemetryReceived;
         }
 
         private void OnTelemetryReceived(object sender, PipeLineServer.Interfaces.MessageReceivedEventArgs e)
         {
-            throw new NotImplementedException();
+            if (e.Message.StartsWith("HEADER"))
+                ProcessTelemetryIndexes(e.Message);
+            else
+                ProcessTelemetry(e.Message);
         }
 
         public void Start() {
@@ -38,107 +46,78 @@ namespace FarmingSimulatorSDKClient
             pipeServer.Stop();
         }
 
+        private void InitializeTelemetryProperties() {
+            telemetryProperties = new Dictionary<string, PropertyInfo>();
+            var properties = telemetry.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var property in properties)
+                telemetryProperties.Add(property.Name.ToLower(), property);
+        }
 
-        /*
-                private bool ReadGameTelemetry(GameTelemetry gameTelemetry, out bool hasChanges)
-                {
-                    if (!GetFileContent(FSFileType.Game, out var content, out hasChanges))
-                        return false;
+        private void ProcessTelemetryIndexes(string headersText) {
+            var headers = headersText.Split('§');            
+            for (short i = 1; i < headers.Length - 1; i++)
+            {
+                if (!telemetryProperties.TryGetValue(headers[i].ToLower(), out var propertyInfo))
+                    continue;
 
-                    if (!hasChanges)
-                        return true;
 
-                    var contents = content.Split(';');
-                    if (contents.Length < 8)
-                        return false;
+                if (!telemetryIndexes.ContainsKey(i))
+                    telemetryIndexes.Add(i, propertyInfo);
+                else
+                    telemetryIndexes[i] = propertyInfo;
+            }
+        }
 
-                    gameTelemetry.Money = ConvertDecimal(contents[0]);
-                    gameTelemetry.TemperatureMin = ConvertDecimal(contents[1]);
-                    gameTelemetry.TemperatureMax = ConvertDecimal(contents[2]);
-                    gameTelemetry.TemperatureTrend = (TemperatureTrendType)ConvertInteger(contents[3]);
-                    gameTelemetry.DayTimeMinutes = ConvertInteger(contents[4]);
-                    gameTelemetry.WeatherCurrent = (WeatherType)ConvertInteger(contents[5]);
-                    gameTelemetry.WeatherNext = (WeatherType)ConvertInteger(contents[6]);
-                    return true;
-                }
+        private void ProcessTelemetry(string telemetryText) {
+            var values = telemetryText.Split('§');
+            for (short i = 1; i < values.Length - 1; i++)
+            {
+                if (!telemetryIndexes.TryGetValue(i, out var propertyInfo))
+                    continue;
 
-                private bool ProcessVehicleDynamicTelemetry(VehicleTelemetry vehicleTelemetry, out bool hasChanges) {
-                    if (!GetFileContent(FSFileType.VehicleDynamic, out var content, out hasChanges))
-                        return false;
+                object convertedValue = null;
+                if (propertyInfo.DeclaringType == typeof(decimal))
+                    convertedValue = ConvertDecimal(values[i]);
+                else if (propertyInfo.DeclaringType == typeof(bool))
+                    convertedValue = ConvertBoolean(values[i]);
+                else if (propertyInfo.DeclaringType == typeof(int))
+                    convertedValue = ConvertInteger(values[i]);
+                else if (propertyInfo.DeclaringType == typeof(long))
+                    convertedValue = ConvertLong(values[i]);
+                else if (propertyInfo.DeclaringType == typeof(string))
+                    convertedValue = values[i];
 
-                    if (!hasChanges)
-                        return true;
+                if (convertedValue != null)
+                    propertyInfo.SetValue(convertedValue, telemetry);
+            }
 
-                    var contents = content.Split(';');
-                    if (contents.Length < 17)
-                        return false;
+            OnTelemetryRead?.Invoke(telemetry);
+        }
+        private decimal ConvertDecimal(string valor) {
+            if (decimal.TryParse(valor, NumberStyles.Any, CultureInfo.GetCultureInfo("en-US"),  out var numero))
+                return numero;
 
-                    vehicleTelemetry.Wear = ConvertDecimal(contents[0]);
-                    vehicleTelemetry.OperationTimeMinutes = ConvertLong(contents[1]);
-                    vehicleTelemetry.Speed = ConvertInteger(contents[2]);
-                    vehicleTelemetry.Fuel = ConvertDecimal(contents[3]);
-                    vehicleTelemetry.RPM = ConvertInteger(contents[4]);
-                    vehicleTelemetry.IsEngineStarted = ConvertBoolean(contents[5]);
-                    vehicleTelemetry.Gear = ConvertInteger(contents[6]);
-                    vehicleTelemetry.IsLightOn = ConvertBoolean(contents[7]);
-                    vehicleTelemetry.IsHighLightOn = ConvertBoolean(contents[8]);
-                    vehicleTelemetry.IsLightTurnRightOn = ConvertBoolean(contents[9]);
-                    vehicleTelemetry.IsLightTurnLeftOn = ConvertBoolean(contents[10]);
-                    vehicleTelemetry.IsLightHazardOn = ConvertBoolean(contents[11]);
-                    vehicleTelemetry.IsWiperOn = ConvertBoolean(contents[12]);
-                    vehicleTelemetry.IsCruiseControlOn = ConvertBoolean(contents[13]);
-                    vehicleTelemetry.CruiseControlSpeed = ConvertInteger(contents[14]);
-                    vehicleTelemetry.IsHandBreakeOn = ConvertBoolean(contents[15]);          
-                    return true;
-                }
+            return 0m;
+        }
 
-                private bool ProcessVehicleStaticTelemetry(VehicleTelemetry vehicleTelemetry, out bool hasChanges)
-                {
-                    if (!GetFileContent(FSFileType.VehicleStatic, out var content, out hasChanges))
-                        return false;
+        private long ConvertLong(string valor) {
+            if (long.TryParse(valor, out var resultado))
+                return resultado;
 
-                    if (!hasChanges)
-                        return true;
+            return 0;
+        }
 
-                    var contents = content.Split(';');
-                    if (contents.Length < 7)
-                        return false;
+        private int ConvertInteger(string valor)
+        {
+            if (int.TryParse(valor, out var resultado))
+                return resultado;
 
-                    vehicleTelemetry.Name = contents[0];
-                    vehicleTelemetry.FuelMax = ConvertDecimal(contents[1]);
-                    vehicleTelemetry.RPMMax = ConvertInteger(contents[2]);
-                    vehicleTelemetry.CruiseControlMaxSpeed = ConvertInteger(contents[3]);
-                    vehicleTelemetry.IsDrivingVehicle = ConvertBoolean(contents[4]);
-                    vehicleTelemetry.IsAIActive = ConvertBoolean(contents[5]);
+            return 0;
+        }
 
-                    return true;
-                }
-
-                private decimal ConvertDecimal(string valor) {
-                    if (decimal.TryParse(valor, NumberStyles.Any, CultureInfo.GetCultureInfo("en-US"),  out var numero))
-                        return numero;
-
-                    return 0m;
-                }
-
-                private long ConvertLong(string valor) {
-                    if (long.TryParse(valor, out var resultado))
-                        return resultado;
-
-                    return 0;
-                }
-
-                private int ConvertInteger(string valor)
-                {
-                    if (int.TryParse(valor, out var resultado))
-                        return resultado;
-
-                    return 0;
-                }
-
-                private bool ConvertBoolean(string valor)
-                {
-                    return valor.Trim() == "1";
-                }*/
+        private bool ConvertBoolean(string valor)
+        {
+            return valor.Trim() == "1";
+        }
     }
 }
