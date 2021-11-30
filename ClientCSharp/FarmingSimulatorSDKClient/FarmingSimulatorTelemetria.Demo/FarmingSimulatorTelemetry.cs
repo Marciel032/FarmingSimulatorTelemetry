@@ -32,13 +32,7 @@ namespace FarmingSimulatorTelemetria.Demo
 
         private void buttonStart_Click(object sender, EventArgs e)
         {
-            if (!Directory.Exists(textBoxFSDirectory.Text))
-            {
-                MessageBox.Show("Directory not exist.");
-                return;
-            }
-
-            telemetryReader = new FSTelemetryReader(textBoxFSDirectory.Text);
+            telemetryReader = new FSTelemetryReader();
             telemetryReader.OnTelemetryRead += TelemetryReader_OnTelemetryRead;
             telemetryReader.Start();
         }

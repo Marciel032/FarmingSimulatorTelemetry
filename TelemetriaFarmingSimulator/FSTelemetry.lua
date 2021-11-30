@@ -20,15 +20,18 @@ function FSTelemetry:update(dt)
 	if FSTelemetry.UpdateInterval.vehicleCurrent >= FSTelemetry.UpdateInterval.vehicle then
 		FSTelemetry.UpdateInterval.vehicleCurrent = 0;
 
-		FSTelemetry.Telemetry.IsDrivingVehicle = FSTelemetry:IsDrivingVehicle();
-		if FSTelemetry.Telemetry.IsDrivingVehicle then
-			FSTelemetry:ProcessVehicleData();
-		else
-			FSTelemetry:ClearVehicleTelemetry();
-		end;
+		FSTelemetry:RefreshPipe();
+		if FSTelemetry.PipeControl.Pipe ~= nil then
+			FSTelemetry.Telemetry.IsDrivingVehicle = FSTelemetry:IsDrivingVehicle();
+			if FSTelemetry.Telemetry.IsDrivingVehicle then
+				FSTelemetry:ProcessVehicleData();
+			else
+				FSTelemetry:ClearVehicleTelemetry();
+			end;
 
-		FSTelemetry:ProcessGameData();
-		FSTelemetry:WriteTelemetry();
+			FSTelemetry:ProcessGameData();
+			FSTelemetry:WriteTelemetry();
+		end;
 		--print(DebugUtil.printTableRecursively(g_currentMission.controlledVehicle,".",0,5));
 	end;
 end
@@ -397,7 +400,7 @@ function FSTelemetry:AddText(value, text)
 end
 
 function FSTelemetry:WriteTelemetry()
-	if FSTelemetry:RefreshPipe() then
+	if FSTelemetry.PipeControl.RefreshCurrent == 0 then
 		FSTelemetry.PipeControl.Pipe:write(FSTelemetry:BuildHeaderText());
 		FSTelemetry.PipeControl.Pipe:flush();
 	end
@@ -407,10 +410,6 @@ function FSTelemetry:WriteTelemetry()
 end
 
 function FSTelemetry:RefreshPipe()
-	if FSTelemetry.PipeControl.RefreshCurrent >= FSTelemetry.PipeControl.RefreshRate then
-		FSTelemetry.PipeControl.RefreshCurrent = 0;
-	end
-
 	if FSTelemetry.PipeControl.RefreshCurrent == 0 then
 		if FSTelemetry.PipeControl.Pipe ~= nil then
 			FSTelemetry.PipeControl.Pipe:flush();
@@ -418,11 +417,12 @@ function FSTelemetry:RefreshPipe()
 		end
 
 		FSTelemetry.PipeControl.Pipe = io.open(FSTelemetry.PipeName, "w");
-		return true;
 	end
 
 	FSTelemetry.PipeControl.RefreshCurrent = FSTelemetry.PipeControl.RefreshCurrent + 1;
-	return false;
+	if FSTelemetry.PipeControl.RefreshCurrent >= FSTelemetry.PipeControl.RefreshRate then
+		FSTelemetry.PipeControl.RefreshCurrent = 0;
+	end
 end
 
 addModEventListener(FSTelemetry);
