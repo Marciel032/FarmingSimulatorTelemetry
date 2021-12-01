@@ -41,5 +41,10 @@ namespace FarmingSimulatorTelemetria.Demo
         {
             telemetryReader?.Stop();
         }
+
+        private void FarmingSimulatorTelemetry_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            telemetryReader?.Stop();
+        }
     }
 }
