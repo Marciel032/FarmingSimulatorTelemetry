@@ -30,10 +30,9 @@ namespace FarmingSimulatorTelemetria.Demo
         private void InitializeComponent()
         {
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
-            this.textBoxFSDirectory = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
             this.buttonStart = new System.Windows.Forms.Button();
             this.buttonStop = new System.Windows.Forms.Button();
+            this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // richTextBox1
@@ -43,29 +42,13 @@ namespace FarmingSimulatorTelemetria.Demo
             | System.Windows.Forms.AnchorStyles.Right)));
             this.richTextBox1.Location = new System.Drawing.Point(12, 46);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(776, 392);
+            this.richTextBox1.Size = new System.Drawing.Size(776, 374);
             this.richTextBox1.TabIndex = 0;
             this.richTextBox1.Text = "";
             // 
-            // textBoxFSDirectory
-            // 
-            this.textBoxFSDirectory.Location = new System.Drawing.Point(12, 21);
-            this.textBoxFSDirectory.Name = "textBoxFSDirectory";
-            this.textBoxFSDirectory.Size = new System.Drawing.Size(614, 20);
-            this.textBoxFSDirectory.TabIndex = 1;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 5);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(160, 13);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "Farming simulator install directory";
-            // 
             // buttonStart
             // 
-            this.buttonStart.Location = new System.Drawing.Point(632, 21);
+            this.buttonStart.Location = new System.Drawing.Point(12, 21);
             this.buttonStart.Name = "buttonStart";
             this.buttonStart.Size = new System.Drawing.Size(75, 23);
             this.buttonStart.TabIndex = 3;
@@ -75,7 +58,7 @@ namespace FarmingSimulatorTelemetria.Demo
             // 
             // buttonStop
             // 
-            this.buttonStop.Location = new System.Drawing.Point(713, 21);
+            this.buttonStop.Location = new System.Drawing.Point(93, 21);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(75, 23);
             this.buttonStop.TabIndex = 4;
@@ -83,18 +66,28 @@ namespace FarmingSimulatorTelemetria.Demo
             this.buttonStop.UseVisualStyleBackColor = true;
             this.buttonStop.Click += new System.EventHandler(this.buttonStop_Click);
             // 
-            // Form1
+            // label1
+            // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 428);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(372, 13);
+            this.label1.TabIndex = 5;
+            this.label1.Text = "If your game is opened with admin rights, open this demo with admin rights too";
+            // 
+            // FarmingSimulatorTelemetry
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.buttonStop);
             this.Controls.Add(this.buttonStart);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.textBoxFSDirectory);
             this.Controls.Add(this.richTextBox1);
-            this.Name = "Form1";
+            this.Name = "FarmingSimulatorTelemetry";
             this.Text = "Farming Simulator Telemetry";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FarmingSimulatorTelemetry_FormClosed);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -103,10 +96,9 @@ namespace FarmingSimulatorTelemetria.Demo
         #endregion
 
         private System.Windows.Forms.RichTextBox richTextBox1;
-        private System.Windows.Forms.TextBox textBoxFSDirectory;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button buttonStart;
         private System.Windows.Forms.Button buttonStop;
+        private System.Windows.Forms.Label label1;
     }
 }
 

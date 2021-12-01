@@ -1,186 +1,99 @@
-﻿using System;
+﻿using FarmingSimulatorSDKClient.PipeLineServer;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Timers;
 
 namespace FarmingSimulatorSDKClient
 {
     public delegate void OnTelemetryRead(FSTelemetry telemetry);
     public class FSTelemetryReader
-    {     
-        private Timer timer;
-        private Dictionary<FSFileType, FSTelemetryFileInfo> files;
+    {
         private FSTelemetry telemetry;
-        private bool timerEnabled;
+        private PipeServer pipeServer;
+        private Dictionary<string, PropertyInfo> telemetryProperties;
+        private Dictionary<short, PropertyInfo> telemetryIndexes;
+        public event OnTelemetryRead OnTelemetryRead;        
 
-        public event OnTelemetryRead OnTelemetryRead;
-
-        public FSTelemetryReader(string pathMainExecutable)
+        public FSTelemetryReader()
         {
-            var pathFiles = GetMainDirectory(pathMainExecutable);
-            files = new Dictionary<FSFileType, FSTelemetryFileInfo>();
-            files.Add(FSFileType.VehicleStatic, new FSTelemetryFileInfo(Path.Combine(pathFiles, "vehicleStaticTelemetry.sim")));            
-            files.Add(FSFileType.VehicleDynamic, new FSTelemetryFileInfo(Path.Combine(pathFiles, "vehicleDynamicTelemetry.sim")));            
-            files.Add(FSFileType.Game, new FSTelemetryFileInfo(Path.Combine(pathFiles, "gameTelemetry.sim")));
-
             telemetry = new FSTelemetry();
-
-            timerEnabled = false;
-            timer = new Timer
-            {
-                Interval = 50,
-                AutoReset = false                
-            };
-            timer.Elapsed += Timer_Elapsed;
+            InitializeTelemetryProperties();
+            telemetryIndexes = new Dictionary<short, PropertyInfo>();
+            pipeServer = new PipeServer("fssimx");
+            pipeServer.MessageReceivedEvent += OnTelemetryReceived;
         }
 
-        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        private void OnTelemetryReceived(object sender, PipeLineServer.Interfaces.MessageReceivedEventArgs e)
         {
-            try
-            {
-                if (!ReadVehicleTelemetry(telemetry.Vehicle, out var hasVehicleChanges))
-                    return;
-
-                if (!ReadGameTelemetry(telemetry.Game, out var hasGameChanges))
-                    return;
-
-                if(hasVehicleChanges || hasGameChanges)
-                    OnTelemetryRead?.Invoke(telemetry);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-            finally {
-                timer.Enabled = timerEnabled;
-            }
-        }        
+            if (e.Message.StartsWith("HEADER"))
+                ProcessTelemetryIndexes(e.Message);
+            else
+                ProcessTelemetry(e.Message);
+        }
 
         public void Start() {
-            timerEnabled = true;
-            timer.Enabled = timerEnabled;
+            pipeServer.Start();
         }
 
         public void Stop() {
-            timerEnabled = false;
-            timer.Enabled = timerEnabled;
+            pipeServer.Stop();
         }
 
-        private bool ReadVehicleTelemetry(VehicleTelemetry vehicleTelemetry, out bool hasChanges) {
-            hasChanges = false;
-            if (!ProcessVehicleDynamicTelemetry(vehicleTelemetry, out var hasChangesDynamic))
-                return false;
-
-            if (!ProcessVehicleStaticTelemetry(vehicleTelemetry, out var hasChangesStatic))
-                return false;
-
-            hasChanges = hasChangesDynamic || hasChangesStatic;
-            return true;
+        private void InitializeTelemetryProperties() {
+            telemetryProperties = new Dictionary<string, PropertyInfo>();
+            var properties = telemetry.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var property in properties)
+                telemetryProperties.Add(property.Name.ToLower(), property);
         }
 
-        private bool ReadGameTelemetry(GameTelemetry gameTelemetry, out bool hasChanges)
-        {
-            if (!GetFileContent(FSFileType.Game, out var content, out hasChanges))
-                return false;
-
-            if (!hasChanges)
-                return true;
-
-            var contents = content.Split(';');
-            if (contents.Length < 8)
-                return false;
-
-            gameTelemetry.Money = ConvertDecimal(contents[0]);
-            gameTelemetry.TemperatureMin = ConvertDecimal(contents[1]);
-            gameTelemetry.TemperatureMax = ConvertDecimal(contents[2]);
-            gameTelemetry.TemperatureTrend = (TemperatureTrendType)ConvertInteger(contents[3]);
-            gameTelemetry.DayTimeMinutes = ConvertInteger(contents[4]);
-            gameTelemetry.WeatherCurrent = (WeatherType)ConvertInteger(contents[5]);
-            gameTelemetry.WeatherNext = (WeatherType)ConvertInteger(contents[6]);
-            return true;
-        }
-
-        private bool GetFileContent(FSFileType fileType, out string content, out bool hasChanges) {
-            var fileInfo = files[fileType];
-
-            hasChanges = false;
-            content = string.Empty;
-
-            if (!File.Exists(fileInfo.FilePah))
-                return false;
-
-            var writeTime = File.GetLastWriteTime(fileInfo.FilePah);
-            if (writeTime <= fileInfo.LastRead) //File was not changed after last read, so, telemetry have same data
-                return true;
-
-            hasChanges = true;            
-
-            using (var fileReader = File.Open(fileInfo.FilePah, FileMode.Open, FileAccess.Read, FileShare.Write))
+        private void ProcessTelemetryIndexes(string headersText) {
+            var headers = headersText.Split('§');            
+            for (short i = 1; i < headers.Length - 1; i++)
             {
-                using (var stringReader = new StreamReader(fileReader, Encoding.UTF8))
-                {
-                    if (stringReader.EndOfStream)
-                        return false;
+                if (!telemetryProperties.TryGetValue(headers[i].ToLower(), out var propertyInfo))
+                    continue;
 
-                    content = stringReader.ReadToEnd();
-                    fileInfo.LastRead = writeTime;
-                    return true;
-                }
-            }            
+
+                if (!telemetryIndexes.ContainsKey(i))
+                    telemetryIndexes.Add(i, propertyInfo);
+                else
+                    telemetryIndexes[i] = propertyInfo;
+            }
         }
 
-        private bool ProcessVehicleDynamicTelemetry(VehicleTelemetry vehicleTelemetry, out bool hasChanges) {
-            if (!GetFileContent(FSFileType.VehicleDynamic, out var content, out hasChanges))
-                return false;
+        private void ProcessTelemetry(string telemetryText) {
+            var values = telemetryText.Split('§');
+            for (short i = 1; i < values.Length - 1; i++)
+            {
+                if (!telemetryIndexes.TryGetValue(i, out var propertyInfo))
+                    continue;
 
-            if (!hasChanges)
-                return true;
+                object convertedValue = null;
+                Type type = propertyInfo.PropertyType;
+                if (type == typeof(decimal))
+                    convertedValue = ConvertDecimal(values[i]);
+                else if (type == typeof(bool))
+                    convertedValue = ConvertBoolean(values[i]);
+                else if (type == typeof(int))
+                    convertedValue = ConvertInteger(values[i]);
+                else if (type == typeof(long))
+                    convertedValue = ConvertLong(values[i]);
+                else if (type == typeof(string))
+                    convertedValue = values[i];
 
-            var contents = content.Split(';');
-            if (contents.Length < 17)
-                return false;
+                if (convertedValue != null)
+                    propertyInfo.SetValue(telemetry, convertedValue);
+            }
 
-            vehicleTelemetry.Wear = ConvertDecimal(contents[0]);
-            vehicleTelemetry.OperationTimeMinutes = ConvertLong(contents[1]);
-            vehicleTelemetry.Speed = ConvertInteger(contents[2]);
-            vehicleTelemetry.Fuel = ConvertDecimal(contents[3]);
-            vehicleTelemetry.RPM = ConvertInteger(contents[4]);
-            vehicleTelemetry.IsEngineStarted = ConvertBoolean(contents[5]);
-            vehicleTelemetry.Gear = ConvertInteger(contents[6]);
-            vehicleTelemetry.IsLightOn = ConvertBoolean(contents[7]);
-            vehicleTelemetry.IsHighLightOn = ConvertBoolean(contents[8]);
-            vehicleTelemetry.IsLightTurnRightOn = ConvertBoolean(contents[9]);
-            vehicleTelemetry.IsLightTurnLeftOn = ConvertBoolean(contents[10]);
-            vehicleTelemetry.IsLightHazardOn = ConvertBoolean(contents[11]);
-            vehicleTelemetry.IsWiperOn = ConvertBoolean(contents[12]);
-            vehicleTelemetry.IsCruiseControlOn = ConvertBoolean(contents[13]);
-            vehicleTelemetry.CruiseControlSpeed = ConvertInteger(contents[14]);
-            vehicleTelemetry.IsHandBreakeOn = ConvertBoolean(contents[15]);          
-            return true;
+            OnTelemetryRead?.Invoke(telemetry);
         }
-
-        private bool ProcessVehicleStaticTelemetry(VehicleTelemetry vehicleTelemetry, out bool hasChanges)
-        {
-            if (!GetFileContent(FSFileType.VehicleStatic, out var content, out hasChanges))
-                return false;
-
-            if (!hasChanges)
-                return true;
-
-            var contents = content.Split(';');
-            if (contents.Length < 5)
-                return false;
-
-            vehicleTelemetry.Name = contents[0];
-            vehicleTelemetry.FuelMax = ConvertDecimal(contents[1]);
-            vehicleTelemetry.RPMMax = ConvertInteger(contents[2]);
-            vehicleTelemetry.CruiseControlMaxSpeed = ConvertInteger(contents[3]);
-
-            return true;
-        }
-
         private decimal ConvertDecimal(string valor) {
             if (decimal.TryParse(valor, NumberStyles.Any, CultureInfo.GetCultureInfo("en-US"),  out var numero))
                 return numero;
@@ -206,15 +119,6 @@ namespace FarmingSimulatorSDKClient
         private bool ConvertBoolean(string valor)
         {
             return valor.Trim() == "1";
-        }
-
-        private string GetMainDirectory(string caminhoExecutavelPrincipal) {
-            if(caminhoExecutavelPrincipal.EndsWith(".exe"))
-                caminhoExecutavelPrincipal = Path.GetDirectoryName(caminhoExecutavelPrincipal);
-
-            if (caminhoExecutavelPrincipal.EndsWith("x64") || caminhoExecutavelPrincipal.EndsWith("x32"))
-                caminhoExecutavelPrincipal = Path.GetDirectoryName(caminhoExecutavelPrincipal);
-            return caminhoExecutavelPrincipal;
         }
     }
 }

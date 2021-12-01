@@ -16,9 +16,10 @@ The project is still under development and future updates will focus on the foll
 - [x] Support to FS19.
 - [x] Support to FS22.
 - [x] Read control cruise data.
-- [ ] Read buy and sell price from vehicle.
-- [ ] Create field indicate if is in vehicle
+- [x] Read buy and sell price from vehicle.
+- [x] Create field indicate if is in vehicle
 - [ ] Improve de mod icon
+- [ ] Read axis to platform motion simulator
 
 ## 💻 Prerequisites
 
@@ -56,20 +57,31 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * Speed 
 * FuelMax 
 * Fuel 
+* RPMMin
 * RPMMax 
 * RPM 
 * IsEngineStarted 
 * Gear 
 * IsLightOn 
 * IsHighLightOn 
+* IsLightTurnRightEnabled
 * IsLightTurnRightOn 
+* IsLightTurnLeftEnabled
 * IsLightTurnLeftOn 
 * IsLightHazardOn
+* IsLightBeaconOn
 * IsWiperOn
 * IsCruiseControlOn
 * CruiseControlSpeed
 * CruiseControlMaxSpeed
 * IsHandBreakeOn
+* IsDrivingVehicle
+* IsAIActive
+* IsReverseDriving
+* IsMotorFanEnabled
+* MotorTemperature
+* VehiclePrice
+* VehicleSellPrice
 
 ### Game
 * Money
@@ -77,8 +89,9 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * TemperatureMax
 * TemperatureTrend
 * DayTime
-* Weather Current
-* Weather Next
+* CurrentWeather
+* NextWeather
+* CurrentDay
 
 ## 📫 Contributing to the project
 To contribute, follow these steps:

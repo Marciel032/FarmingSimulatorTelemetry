@@ -1,208 +1,339 @@
-FSTelemetry = {};
+FSTelemetry = {}
+FSContext = {	
+	UpdateInterval = {
+		Target = 16.66, --Restrict to 60 FPS. 16.66 = 1000ms / 60 frames
+		Current = 0.0
+	},
+	PipeControl = {
+		Pipe = nil,
+		PipeName = "\\\\.\\pipe\\fssimx",
+		RefreshRate = 300,
+		RefreshCurrent = -1
+	},
+	Telemetry = {}
+};
 
-local updateInterval = {
-	vehicle = 300,
-	vehicleCurrent = 0,
-	game = 1000,
-	gameCurrent = 1000
-}
-
-local drivingVehicleLastState = false;
-
-local vehicleDynamicTelemetry = {}
-local vehicleStaticTelemetry = {}
-local gameTelemetry = {}
-
-local dynamicVehicleTelemetrySaved = {}
-local staticVehicleTelemetrySaved = {}
-local gameTelemetrySaved = {}
-
-function FSTelemetry.ClearVehicleTelemetry()
-	vehicleStaticTelemetry.Name = "";
-	vehicleStaticTelemetry.FuelMax = 0.0;
-	vehicleStaticTelemetry.RPMMax = 0;
-	vehicleStaticTelemetry.CruiseControlMaxSpeed = 0;
-
-	vehicleDynamicTelemetry.Wear = 0.0;
-	vehicleDynamicTelemetry.OperationTimeMinutes = 0;
-	vehicleDynamicTelemetry.Speed = 0;
-	vehicleDynamicTelemetry.Fuel = 0.0;
-	vehicleDynamicTelemetry.RPM = 0;
-	vehicleDynamicTelemetry.IsMotorStarted = false;
-	vehicleDynamicTelemetry.Gear = 0;
-	vehicleDynamicTelemetry.IsLightOn = false;
-	vehicleDynamicTelemetry.IsLightHighOn = false;
-	vehicleDynamicTelemetry.IsLightTurnRightOn = false;
-	vehicleDynamicTelemetry.IsLightTurnLeftOn = false;
-	vehicleDynamicTelemetry.IsLightHazardOn = false;
-	vehicleDynamicTelemetry.IsWipersOn = false;
-	vehicleDynamicTelemetry.IsCruiseControlOn = false;
-	vehicleDynamicTelemetry.CruiseControlSpeed = 0;
-	vehicleDynamicTelemetry.IsHandBrakeOn = false;
+function FSTelemetry:ini()
+	FSTelemetry:ClearGameTelemetry();
+	FSTelemetry:ClearVehicleTelemetry();
+	print("inicia")
 end
-
-function FSTelemetry.ClearGameTelemetry()
-	gameTelemetry.Money = 0.0;
-	gameTelemetry.TemperatureMin = 0.0;
-	gameTelemetry.TemperatureMax = 0.0;
-	gameTelemetry.TempetatureTrend = 0;
-	gameTelemetry.DayTimeMinutes = 0;
-	gameTelemetry.WeatherCurrent = 0;
-	gameTelemetry.WeatherNext = 0;
-end
-
-FSTelemetry:ClearVehicleTelemetry();
-FSTelemetry:ClearGameTelemetry();
 
 function FSTelemetry:update(dt)
-	updateInterval.vehicleCurrent = updateInterval.vehicleCurrent + dt;	
-	if updateInterval.vehicleCurrent >= updateInterval.vehicle then
-		updateInterval.vehicleCurrent = 0;
+	FSContext.UpdateInterval.Current = FSContext.UpdateInterval.Current + dt;
+	if FSContext.UpdateInterval.Current >= FSContext.UpdateInterval.Target then
+		FSContext.UpdateInterval.Current = 0;
 
-		local drivingVehicle = FSTelemetry:IsDrivingVehicle();
-		if drivingVehicle then
-			FSTelemetry:ProcessVehicleData();
-			FSTelemetry:WriteVehicleDynamicFile();
-			FSTelemetry:WriteVehicleStaticFile();
-		else
-			-- Just write file a sigle time when player get out vehicle
-			if drivingVehicleLastState then
+		FSTelemetry:RefreshPipe();
+		if FSContext.PipeControl.Pipe ~= nil then
+			FSContext.Telemetry.IsDrivingVehicle = FSTelemetry:IsDrivingVehicle();
+			if FSContext.Telemetry.IsDrivingVehicle then
+				FSTelemetry:ProcessVehicleData();
+			else
 				FSTelemetry:ClearVehicleTelemetry();
-				FSTelemetry:WriteVehicleDynamicFile();
-				FSTelemetry:WriteVehicleStaticFile();
-			end
-		end;
+			end;
 
-		drivingVehicleLastState = drivingVehicle;
+			FSTelemetry:ProcessGameData();
+			FSTelemetry:WriteTelemetry();
+		end;
 		--print(DebugUtil.printTableRecursively(g_currentMission.controlledVehicle,".",0,5));
 	end;
+end
 
-	updateInterval.gameCurrent = updateInterval.gameCurrent + dt;
-	if updateInterval.gameCurrent >= updateInterval.game then
-		updateInterval.gameCurrent = 0;
+function FSTelemetry:ClearGameTelemetry()
+	FSContext.Telemetry.Money = 0.0;
+	FSContext.Telemetry.TemperatureMin = 0.0;
+	FSContext.Telemetry.TemperatureMax = 0.0;
+	FSContext.Telemetry.TempetatureTrend = 0;
+	FSContext.Telemetry.DayTimeMinutes = 0;
+	FSContext.Telemetry.WeatherCurrent = 0;
+	FSContext.Telemetry.WeatherNext = 0;
+	FSContext.Telemetry.Day = 0;
+end
 
-		FSTelemetry:ProcessGameData();
-		FSTelemetry:WriteGameFile();
-	end;
+function FSTelemetry:ClearVehicleTelemetry()
+	FSContext.Telemetry.VehicleName = "";
+	FSContext.Telemetry.FuelMax = 0.0;
+	FSContext.Telemetry.Fuel = 0.0;
+	FSContext.Telemetry.RPMMin = 0;
+	FSContext.Telemetry.RPMMax = 0;
+	FSContext.Telemetry.RPM = 0;
+	FSContext.Telemetry.IsDrivingVehicle = false;
+	FSContext.Telemetry.IsAiActive = false;
+	FSContext.Telemetry.Wear = 0.0;
+	FSContext.Telemetry.OperationTimeMinutes = 0;
+	FSContext.Telemetry.Speed = 0;
+	FSContext.Telemetry.IsEngineStarted = false;
+	FSContext.Telemetry.Gear = 0;
+	FSContext.Telemetry.IsLightOn = false;
+	FSContext.Telemetry.IsLightHighOn = false;
+	FSContext.Telemetry.IsLightTurnRightEnabled = false;
+	FSContext.Telemetry.IsLightTurnRightOn = false;
+	FSContext.Telemetry.IsLightTurnLeftEnabled = false;
+	FSContext.Telemetry.IsLightTurnLeftOn = false;
+	FSContext.Telemetry.IsLightHazardOn = false;
+	FSContext.Telemetry.IsLightBeaconOn = false;
+	FSContext.Telemetry.IsWipersOn = false;
+	FSContext.Telemetry.IsCruiseControlOn = false;
+	FSContext.Telemetry.CruiseControlMaxSpeed = 0;
+	FSContext.Telemetry.CruiseControlSpeed = 0;
+	FSContext.Telemetry.IsHandBrakeOn = false;
+	FSContext.Telemetry.IsReverseDriving = false;
+	FSContext.Telemetry.IsMotorFanEnabled = false;
+	FSContext.Telemetry.MotorTemperature = 0.0;
+	FSContext.Telemetry.VehiclePrice = 0.0;
+	FSContext.Telemetry.VehicleSellPrice = 0.0;
 end
 
 function FSTelemetry:IsDrivingVehicle()
 	local vehicle = g_currentMission.controlledVehicle;
 	local hasVehicle = vehicle ~= nil;
 	return hasVehicle and vehicle.spec_motorized ~= nil;
-	--TODO - Check vehicle is driving by IA
 end
 
 function FSTelemetry:ProcessVehicleData()
-	local vehicle = g_currentMission.controlledVehicle;
-
-	local movingDirection = 0.0;
+	local mission = g_currentMission;
+	local vehicle = mission.controlledVehicle;
+	local motor = vehicle:getMotor();
 	local specMotorized = vehicle.spec_motorized;
-	if specMotorized ~= nil then
-		vehicleDynamicTelemetry.IsMotorStarted = specMotorized.isMotorStarted;		
-		--specMotorized.motorFan.enabled
-		--specMotorized.motorTemperature.value
+	local specDrivable = vehicle.spec_drivable;
+	local specLights = vehicle.spec_lights;
+	local specWipers = vehicle.spec_wipers;
 
-		local lastSpeed = math.max(0, vehicle:getLastSpeed() * specMotorized.speedDisplayScale)
-		vehicleDynamicTelemetry.Speed = math.floor(lastSpeed);
-		if math.abs(lastSpeed-vehicleDynamicTelemetry.Speed) > 0.5 then
-			vehicleDynamicTelemetry.Speed = vehicleDynamicTelemetry.Speed + 1;
+	FSTelemetry:ProcessPrice(vehicle);
+	FSTelemetry:ProcessMotorFanEnabled(specMotorized);
+	FSTelemetry:ProcessMotorTemperature(specMotorized);
+	FSTelemetry:ProcessSpeed(vehicle, specMotorized);
+	FSTelemetry:ProcessGear(motor);
+	FSTelemetry:ProcessRPM(motor);
+	FSTelemetry:ProcessReverseDriving(vehicle, specMotorized);
+	FSTelemetry:ProcessEngineStarted(specMotorized);
+	FSTelemetry:ProcessVehicleName(mission);
+	FSTelemetry:ProcessAiActive(vehicle);
+	FSTelemetry:ProcessWear(vehicle);
+	FSTelemetry:ProcessOperationTime(vehicle);
+	FSTelemetry:ProcessFuelLevelAndCapacity(vehicle);
+	FSTelemetry:ProcessCruiseControl(specDrivable);
+	FSTelemetry:ProcessHandBrake(specDrivable);
+	FSTelemetry:ProcessTurnLightsHazard(specLights);
+	FSTelemetry:ProcessLightBeacon(specLights);
+	FSTelemetry:ProcessLight(specLights);
+	FSTelemetry:ProcessWiper(specWipers, mission);
+end
+
+function FSTelemetry:ProcessMotorFanEnabled(motorized)
+	if motorized ~= nil and motorized.motorFan ~= nil then
+		FSContext.Telemetry.IsMotorFanEnabled = motorized.motorFan.enabled;
+	else
+		FSContext.Telemetry.IsMotorFanEnabled = false;
+	end;
+end
+
+function FSTelemetry:ProcessMotorTemperature(motorized)
+	if motorized ~= nil and motorized.motorTemperature ~= nil then
+		FSContext.Telemetry.MotorTemperature = motorized.motorTemperature.value;
+	else
+		FSContext.Telemetry.MotorTemperature = 0;
+	end;
+end
+
+function FSTelemetry:ProcessSpeed(vehicle, motorized)
+	if motorized ~= nil and vehicle.getLastSpeed ~= nil then
+		local lastSpeed = math.max(0, vehicle:getLastSpeed() * motorized.speedDisplayScale)
+		FSContext.Telemetry.Speed = math.floor(lastSpeed);
+		if math.abs(lastSpeed - FSContext.Telemetry.Speed) > 0.5 then
+			FSContext.Telemetry.Speed = FSContext.Telemetry.Speed + 1;
 		end
-		movingDirection = specMotorized.movingDirection;
+	else
+		FSContext.Telemetry.Speed = 0;
 	end;
+end
 
-	vehicleStaticTelemetry.Name = vehicle:getName();
+function FSTelemetry:ProcessRPM(motor)
+	if motor ~= nil then
+		if motor.getMinRpm ~= nil then
+			FSContext.Telemetry.RPMMin = math.ceil(motor:getMinRpm());
+		else
+			FSContext.Telemetry.RPMMin = 0;
+		end	
+
+		if motor.getMaxRpm ~= nil then
+			FSContext.Telemetry.RPMMax = math.ceil(motor:getMaxRpm());
+		else
+			FSContext.Telemetry.RPMMax = 0;
+		end
+
+		if motor.getLastRealMotorRpm ~= nil then
+			FSContext.Telemetry.RPM = math.ceil(motor:getLastRealMotorRpm());
+		else
+			FSContext.Telemetry.RPM = 0;
+		end
+	end;
+end
+
+function FSTelemetry:ProcessPrice(vehicle)
+	if vehicle ~= nil then
+		if vehicle.getPrice ~= nil then
+			FSContext.Telemetry.VehiclePrice = vehicle:getPrice();
+		else
+			FSContext.Telemetry.VehiclePrice = 0.0;
+		end
+
+		if vehicle.getSellPrice ~= nil then
+			FSContext.Telemetry.VehicleSellPrice = vehicle:getSellPrice();
+		else
+			FSContext.Telemetry.VehicleSellPrice = 0.0;
+		end
+	end;
+end
+
+function FSTelemetry:ProcessGear(motor)
+	if motor ~= nil then
+		FSContext.Telemetry.Gear = motor.gear;
+	end;
+end
+
+function FSTelemetry:ProcessReverseDriving(vehicle, motorized)
+	local reverserDirection = vehicle.getReverserDirection == nil and 1 or vehicle:getReverserDirection();
+	FSContext.Telemetry.IsReverseDriving = vehicle:getLastSpeed() > motorized.reverseDriveThreshold and vehicle.movingDirection ~= reverserDirection;
+end
+
+function FSTelemetry:ProcessEngineStarted(motorized)
+	FSContext.Telemetry.IsEngineStarted = motorized ~= nil and motorized.isMotorStarted;
+end
+
+function FSTelemetry:ProcessVehicleName(mission)
+	FSContext.Telemetry.VehicleName = mission.currentVehicleName;
+end
+
+function FSTelemetry:ProcessAiActive(vehicle)
+	FSContext.Telemetry.IsAiActive = vehicle.getIsAIActive ~= nil and vehicle:getIsAIActive();
+end
+
+function FSTelemetry:ProcessWear(vehicle)
 	if vehicle.getWearTotalAmount ~= nil and vehicle:getWearTotalAmount() ~= nil then
-		vehicleDynamicTelemetry.Wear = vehicle:getWearTotalAmount();
+		FSContext.Telemetry.Wear = vehicle:getWearTotalAmount();
+	else
+		FSContext.Telemetry.Wear = 0;
 	end;
+end
 
+function FSTelemetry:ProcessOperationTime(vehicle)
 	if vehicle.operatingTime ~= nil then
-		vehicleDynamicTelemetry.OperationTimeMinutes = vehicle.operatingTime / (1000 * 60);
+		FSContext.Telemetry.OperationTimeMinutes = math.floor(vehicle.operatingTime / (1000 * 60));
+	else
+		FSContext.Telemetry.OperationTimeMinutes = 0;
 	end;
+end
 
+function FSTelemetry:ProcessFuelLevelAndCapacity(vehicle)
 	--TODO: GET CURRENT FILL TYPE
 	local fuelFillType = vehicle:getConsumerFillUnitIndex(FillType.DIESEL)
 	if vehicle.getFillUnitCapacity ~= nil then
-		vehicleStaticTelemetry.FuelMax = vehicle:getFillUnitCapacity(fuelFillType);
+		FSContext.Telemetry.FuelMax = vehicle:getFillUnitCapacity(fuelFillType);
+	else
+		FSContext.Telemetry.FuelMax = 0;
 	end;
 
 	if vehicle.getFillUnitFillLevel ~= nil then
-		vehicleDynamicTelemetry.Fuel = vehicle:getFillUnitFillLevel(fuelFillType);
+		FSContext.Telemetry.Fuel = vehicle:getFillUnitFillLevel(fuelFillType);
+	else
+		FSContext.Telemetry.Fuel = 0;
 	end;
+end
 
-	local motor = vehicle:getMotor();
-	if motor ~= nil then	
-		if motor.getMaxRpm ~= nil then
-			vehicleStaticTelemetry.RPMMax = math.ceil(motor:getMaxRpm());
-		end	
-		if motor.getLastRealMotorRpm ~= nil and vehicleDynamicTelemetry.IsMotorStarted then
-			vehicleDynamicTelemetry.RPM = math.ceil(motor:getLastRealMotorRpm());
-		end		
-		vehicleDynamicTelemetry.Gear = motor.gear;
-		if movingDirection < 0 then
-			vehicleDynamicTelemetry.Gear = vehicleDynamicTelemetry.Gear * -1;
-		end
+function FSTelemetry:ProcessCruiseControl(drivable)
+	if drivable ~= nil then
+		--Drivable.CRUISECONTROL_STATE_OFF
+		--Drivable.CRUISECONTROL_STATE_ACTIVE
+		--Drivable.CRUISECONTROL_STATE_FULL
+		FSContext.Telemetry.IsCruiseControlOn = drivable.cruiseControl.state ~= Drivable.CRUISECONTROL_STATE_OFF;
+		FSContext.Telemetry.CruiseControlSpeed = drivable.cruiseControl.speed;
+		FSContext.Telemetry.CruiseControlMaxSpeed = drivable.cruiseControl.maxSpeed;
+	else
+		FSContext.Telemetry.IsCruiseControlOn = false;
+		FSContext.Telemetry.CruiseControlSpeed = 0;
+		FSContext.Telemetry.CruiseControlMaxSpeed = 0;
+	end
+end
+
+--Aparently, it does'nt work
+function FSTelemetry:ProcessHandBrake(drivable)
+	if drivable ~= nil then
+		FSContext.Telemetry.IsHandBrakeOn = drivable.doHandbrake;
+	else
+		FSContext.Telemetry.IsHandBrakeOn = false;
+	end
+end
+
+function FSTelemetry:ProcessTurnLightsHazard(lights)
+	if lights ~= nil and lights.turnLightState ~= nil then
+		local state = lights.turnLightState;
+		FSContext.Telemetry.IsLightTurnRightEnabled = state == Lights.TURNLIGHT_RIGHT;
+		FSContext.Telemetry.IsLightTurnLeftEnabled = state == Lights.TURNLIGHT_LEFT;
+		FSContext.Telemetry.IsLightHazardOn = state == Lights.TURNLIGHT_HAZARD;
+
+		local alpha = MathUtil.clamp((math.cos(7 * getShaderTimeSec()) + 0.2), 0, 1)
+		FSContext.Telemetry.IsLightTurnRightOn = (FSContext.Telemetry.IsLightTurnRightEnabled or FSContext.Telemetry.IsLightHazardOn) and alpha > 0.5;
+		FSContext.Telemetry.IsLightTurnLeftOn = (FSContext.Telemetry.IsLightTurnLeftEnabled or FSContext.Telemetry.IsLightHazardOn) and alpha > 0.5;
+	else
+		FSContext.Telemetry.IsLightTurnRightEnabled = false;
+		FSContext.Telemetry.IsLightTurnRightOn = false;
+		FSContext.Telemetry.IsLightTurnLeftEnabled = false;
+		FSContext.Telemetry.IsLightTurnLeftOn = false;
+		FSContext.Telemetry.IsLightHazardOn = false;
 	end;
+end
 
-	local specLights = vehicle.spec_lights;
-	if specLights ~= nil then
-		if specLights.turnLightState ~= nil then
-			local state = specLights.turnLightState;
-			vehicleDynamicTelemetry.IsLightTurnRightOn = state	== Lights.TURNLIGHT_RIGHT;
-			vehicleDynamicTelemetry.IsLightTurnLeftOn = state == Lights.TURNLIGHT_LEFT;
-			vehicleDynamicTelemetry.IsLightHazardOn = state == Lights.TURNLIGHT_HAZARD;
+function FSTelemetry:ProcessLightBeacon(lights)
+	if lights ~= nil and lights.getBeaconLightsVisibility ~= nil then
+		FSContext.Telemetry.IsLightBeaconOn = lights:getBeaconLightsVisibility();
+	else
+		FSContext.Telemetry.IsLightBeaconOn = false;
+	end;
+end
 
-			--TODO: CALCULATE TURN LIGHT BLINK
-			--local alpha = MathUtil.clamp((math.cos(7*getShaderTimeSec()) + 0.2), 0, 1)
-		end;
-
-
+function FSTelemetry:ProcessLight(lights)
+	if lights ~= nil and lights.lightsTypesMask ~= nil then
 		--0 - LIGHT				
 		--1 - TURN LIGHT
 		--2 - FRONTAL LIGHT
 		--3 - HIGH LIGHT
-		if specLights.lightsTypesMask ~= nil then
-			vehicleDynamicTelemetry.IsLightOn = bitAND(specLights.lightsTypesMask, 2^0) ~= 0;
-			vehicleDynamicTelemetry.IsLightHighOn = bitAND(specLights.lightsTypesMask, 2^3) ~= 0;
-		end;
-	end;
 
-	local specWipers = vehicle.spec_wipers;
-	if specWipers ~= nil and specWipers.hasWipers and vehicleDynamicTelemetry.IsMotorStarted then
-		local rainScale = g_currentMission.environment.weather:getRainFallScale();
+		FSContext.Telemetry.IsLightOn = bitAND(lights.lightsTypesMask, 2^0) ~= 0;
+		FSContext.Telemetry.IsLightHighOn = bitAND(lights.lightsTypesMask, 2^3) ~= 0;
+	else
+		FSContext.Telemetry.IsLightOn = false;
+		FSContext.Telemetry.IsLightHighOn = false;
+	end;
+end
+
+function FSTelemetry:ProcessWiper(wipers, mission)
+	FSContext.Telemetry.IsWipersOn = false;
+	if wipers ~= nil and wipers.hasWipers then
+		local rainScale = (mission.environment ~= nil and mission.environment.weather ~= nil and mission.environment.weather.getRainFallScale ~= nil) and mission.environment.weather:getRainFallScale() or 0;
 		if rainScale > 0 then
-			for _, wiper in pairs(specWipers.wipers) do
+			for _, wiper in pairs(wipers.wipers) do
 				for stateIndex,state in ipairs(wiper.states) do
 					if rainScale <= state.maxRainValue then
-						vehicleDynamicTelemetry.IsWipersOn = true;
+						FSContext.Telemetry.IsWipersOn = true;
 						break
 					end
 				end
-				if vehicleDynamicTelemetry.IsWipersOn then
+				if FSContext.Telemetry.IsWipersOn then
 					break;
 				end
 			end
 		end
 	end;
-
-	local specDrivable = vehicle.spec_drivable;
-	if specDrivable ~= nil then
-		--Drivable.CRUISECONTROL_STATE_OFF
-		--Drivable.CRUISECONTROL_STATE_ACTIVE
-		--Drivable.CRUISECONTROL_STATE_FULL
-		vehicleDynamicTelemetry.IsCruiseControlOn = specDrivable.cruiseControl.state ~= Drivable.CRUISECONTROL_STATE_OFF;
-		vehicleDynamicTelemetry.CruiseControlSpeed = specDrivable.cruiseControl.speed;
-		vehicleStaticTelemetry.CruiseControlMaxSpeed = specDrivable.cruiseControl.maxSpeed;
-
-		vehicleDynamicTelemetry.IsHandBrakeOn = specDrivable.doHandbrake;
-	end
 end
 
 function FSTelemetry:ProcessGameData()
 	if g_currentMission.player ~= nil then
         local farm = g_farmManager:getFarmById(g_currentMission.player.farmId)
 		if farm ~= nil then
-			gameTelemetry.Money = farm.money;
+			FSContext.Telemetry.Money = farm.money;
+			--g_currentMission.mission.missionInfo.money
 		end
     end
 
@@ -210,92 +341,53 @@ function FSTelemetry:ProcessGameData()
 		local environment = g_currentMission.environment;
 		if environment.weather ~= nil then
 			local minTemp, maxTemp = environment.weather:getCurrentMinMaxTemperatures();
-			gameTelemetry.TemperatureMin = minTemp;
-			gameTelemetry.TemperatureMax = maxTemp;
-			gameTelemetry.TempetatureTrend = environment.weather:getCurrentTemperatureTrend();
+			FSContext.Telemetry.TemperatureMin = minTemp;
+			FSContext.Telemetry.TemperatureMax = maxTemp;
+			FSContext.Telemetry.TempetatureTrend = environment.weather:getCurrentTemperatureTrend();
 		end
 
-		gameTelemetry.DayTimeMinutes = environment.dayTime / (1000 * 60);
+		FSContext.Telemetry.DayTimeMinutes = math.floor(environment.dayTime / (1000 * 60));
 
-		local sixHours = 6 * 60 * 60 * 1000
-		local dayPlus6h, timePlus6h = environment:getDayAndDayTime(environment.dayTime + sixHours, environment.currentDay)
-		gameTelemetry.WeatherCurrent = environment.weather:getWeatherTypeAtTime(environment.currentDay, environment.dayTime)
-		gameTelemetry.WeatherNext = environment.weather:getWeatherTypeAtTime(dayPlus6h, timePlus6h)
+		local sixHours = 6 * 60 * 60 * 1000;
+		local dayPlus6h, timePlus6h = environment:getDayAndDayTime(environment.dayTime + sixHours, environment.currentDay);
+		FSContext.Telemetry.WeatherCurrent = environment.weather:getWeatherTypeAtTime(environment.currentDay, environment.dayTime);
+		FSContext.Telemetry.WeatherNext = environment.weather:getWeatherTypeAtTime(dayPlus6h, timePlus6h);
+
+		FSContext.Telemetry.Day = environment.currentDay;
 	end
 end
 
-function  FSTelemetry:BuildVehicleStaticText()
-	local text = FSTelemetry:AddText(vehicleStaticTelemetry.Name, "");
-	text = FSTelemetry:AddTextDecimal(vehicleStaticTelemetry.FuelMax, text);
-	text = FSTelemetry:AddTextNumber(vehicleStaticTelemetry.RPMMax, text);
-	text = FSTelemetry:AddTextNumber(vehicleStaticTelemetry.CruiseControlMaxSpeed, text);
+function  FSTelemetry:BuildHeaderText()
+	local text = FSTelemetry:AddText("HEADER", "");
+	for k, v in pairs(FSContext.Telemetry) do
+		text = FSTelemetry:AddText(k, text);
+	end
 	return text;
 end 
 
-function FSTelemetry:BuildVehicleDynamicText()
-	local text = FSTelemetry:AddTextDecimal(vehicleDynamicTelemetry.Wear, "");
-	text = FSTelemetry:AddTextNumber(vehicleDynamicTelemetry.OperationTimeMinutes, text);
-	text = FSTelemetry:AddTextNumber(vehicleDynamicTelemetry.Speed, text);
-	text = FSTelemetry:AddTextDecimal(vehicleDynamicTelemetry.Fuel, text);
-	text = FSTelemetry:AddTextNumber(vehicleDynamicTelemetry.RPM, text);
-	text = FSTelemetry:AddTextBoolean(vehicleDynamicTelemetry.IsMotorStarted, text);
-	text = FSTelemetry:AddTextNumber(vehicleDynamicTelemetry.Gear, text);
-	text = FSTelemetry:AddTextBoolean(vehicleDynamicTelemetry.IsLightOn, text);
-	text = FSTelemetry:AddTextBoolean(vehicleDynamicTelemetry.IsLightHighOn, text);
-	text = FSTelemetry:AddTextBoolean(vehicleDynamicTelemetry.IsLightTurnRightOn, text);
-	text = FSTelemetry:AddTextBoolean(vehicleDynamicTelemetry.IsLightTurnLeftOn, text);
-	text = FSTelemetry:AddTextBoolean(vehicleDynamicTelemetry.IsLightHazardOn, text);
-	text = FSTelemetry:AddTextBoolean(vehicleDynamicTelemetry.IsWipersOn, text);
-	text = FSTelemetry:AddTextBoolean(vehicleDynamicTelemetry.IsCruiseControlOn, text);
-	text = FSTelemetry:AddTextNumber(vehicleDynamicTelemetry.CruiseControlSpeed, text);
-	text = FSTelemetry:AddTextBoolean(vehicleDynamicTelemetry.IsHandBrakeOn, text);
+function FSTelemetry:BuildBodyText()
+	local text = FSTelemetry:AddText("BODY", "");
+	for key, value in pairs(FSContext.Telemetry) do
+		local type = type(value);
+		if type == "boolean" then
+			text = FSTelemetry:AddTextBoolean(value, text);
+		elseif type == "string" then
+			text = FSTelemetry:AddText(value, text);
+		elseif type =="number" then
+			text = FSTelemetry:AddTextDecimal(value, text);
+		end
+	end
 	return text;
-end
-
-function FSTelemetry:BuildGameText()
-	local text = FSTelemetry:AddTextDecimal(gameTelemetry.Money, "");
-	text = FSTelemetry:AddTextDecimal(gameTelemetry.TemperatureMin, text);
-	text = FSTelemetry:AddTextDecimal(gameTelemetry.TemperatureMax, text);
-	text = FSTelemetry:AddTextNumber(gameTelemetry.TempetatureTrend, text);
-	text = FSTelemetry:AddTextNumber(gameTelemetry.DayTimeMinutes, text);
-	text = FSTelemetry:AddTextNumber(gameTelemetry.WeatherCurrent, text);
-	text = FSTelemetry:AddTextNumber(gameTelemetry.WeatherNext, text);
-	return text;
-end
-
-function FSTelemetry:CopyTable(table)
-	local table2 = {}
-	for key,value in pairs(table) do
-		table2[key] = value
-	end
-	return table2
-end
-
-function FSTelemetry:TablesAreEquals(table1,table2,ignore_mt)
-	local ty1 = type(table1)
-	local ty2 = type(table2)
-	if ty1 ~= ty2 then return false end
-	if ty1 ~= 'table' and ty2 ~= 'table' then return table1 == table2 end
-	local mt = getmetatable(table1)
-	if not ignore_mt and mt and mt.__eq then return table1 == table2 end
-	for k1,v1 in pairs(table1) do
-		local v2 = table2[k1]
-		if v2 == nil or not FSTelemetry:TablesAreEquals(v1,v2) then return false end
-	end
-	for k2,v2 in pairs(table2) do
-		local v1 = table1[k2]
-		if v1 == nil or not FSTelemetry:TablesAreEquals(v1,v2) then return false end
-	end
-	return true
 end
 
 function FSTelemetry:AddTextDecimal(value, text)
-	local decimalText = string.format("%.2f", value);
-	return FSTelemetry:AddText(decimalText, text);
-end
-
-function FSTelemetry:AddTextNumber(value, text)
-	local numberText = string.format("%d", value);
+	local integerPart, floatPart = math.modf(value)	
+	local numberText;
+	if floatPart > 0 then
+		numberText = string.format("%.2f", value);
+	else
+		numberText = string.format("%d", integerPart);
+	end
 	return FSTelemetry:AddText(numberText, text);
 end
 
@@ -305,50 +397,33 @@ function FSTelemetry:AddTextBoolean(value, text)
 end
 
 function FSTelemetry:AddText(value, text)
-	return text .. value .. ";";
+	return text .. value .. "§";
 end
 
-function FSTelemetry:WriteVehicleDynamicFile()
-	if FSTelemetry:TablesAreEquals(vehicleDynamicTelemetry, dynamicVehicleTelemetrySaved) then
-		return;
-	end;
+function FSTelemetry:WriteTelemetry()
+	if FSContext.PipeControl.RefreshCurrent == 0 then
+		FSContext.PipeControl.Pipe:write(FSTelemetry:BuildHeaderText());
+		FSContext.PipeControl.Pipe:flush();
+	end
 
-	local text = FSTelemetry:BuildVehicleDynamicText();
-	if FSTelemetry:WriteFile("vehicleDynamicTelemetry.sim", text) then
-		dynamicVehicleTelemetrySaved = FSTelemetry:CopyTable(vehicleDynamicTelemetry);
-	end;
+	FSContext.PipeControl.Pipe:write(FSTelemetry:BuildBodyText());
+	FSContext.PipeControl.Pipe:flush();
 end
 
-function FSTelemetry:WriteVehicleStaticFile()
-	if FSTelemetry:TablesAreEquals(vehicleStaticTelemetry, staticVehicleTelemetrySaved) then
-		return;
-	end;
+function FSTelemetry:RefreshPipe()
+	FSContext.PipeControl.RefreshCurrent = FSContext.PipeControl.RefreshCurrent + 1;
+	if FSContext.PipeControl.RefreshCurrent >= FSContext.PipeControl.RefreshRate then
+		FSContext.PipeControl.RefreshCurrent = 0;
+	end
 
-	local text = FSTelemetry:BuildVehicleStaticText();
-	if FSTelemetry:WriteFile("vehicleStaticTelemetry.sim", text) then
-		staticVehicleTelemetrySaved = FSTelemetry:CopyTable(vehicleStaticTelemetry);
-	end;
-end
+	if FSContext.PipeControl.RefreshCurrent == 0 then
+		if FSContext.PipeControl.Pipe ~= nil then
+			FSContext.PipeControl.Pipe:flush();
+			FSContext.PipeControl.Pipe:close();
+		end
 
-function FSTelemetry:WriteGameFile()
-	if FSTelemetry:TablesAreEquals(gameTelemetry, gameTelemetrySaved) then
-		return;
-	end;
-
-	local text = FSTelemetry:BuildGameText();
-	if FSTelemetry:WriteFile("gameTelemetry.sim", text) then
-		gameTelemetrySaved = FSTelemetry:CopyTable(gameTelemetry);
-	end;
-end
-
-function FSTelemetry:WriteFile(name, content)
-	local file = io.open(name, "w");
-	if file ~= nil then
-		file:write(content);
-		file:close();
-		return true;
-	end;
-	return false;
+		FSContext.PipeControl.Pipe = io.open(FSContext.PipeControl.PipeName, "w");
+	end	
 end
 
 addModEventListener(FSTelemetry);
