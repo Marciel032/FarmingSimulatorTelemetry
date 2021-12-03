@@ -64,6 +64,7 @@ namespace FarmingSimulatorSDKClient
     {
         Sun = 1,
         Rain = 2,
-        Cloud = 3
+        Cloud = 3,
+        Snow = 4
     }
 }
