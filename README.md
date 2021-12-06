@@ -31,18 +31,18 @@ Before starting, make sure you have met the following requirements:
 ## 🚀 Installing
 
 Put mod telemetry in farming mods folder.
-When game is running, the mod will write files about telemetry on farming install folder.
+When game is running, the mod will write data about telemetry on local pipeline.
 
 ## ☕ Using
 
-Start the telemetry reader, passing by parameter de farming install folder
+Start the telemetry reader
 ```csharp
-var telemetryReader = new FSTelemetryReader(@"Folder where Farming simulator is installed");
+var telemetryReader = new FSTelemetryReader();
 telemetryReader.OnTelemetryRead += TelemetryReader_OnTelemetryRead;
 telemetryReader.Start();
 ```
 
-The event OnTelemetryRead is called on new information is writed on telemetry files
+The event OnTelemetryRead is called on new information is writed
 ```csharp
 private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 {
