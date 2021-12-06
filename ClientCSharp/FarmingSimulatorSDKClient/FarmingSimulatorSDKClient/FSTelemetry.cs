@@ -23,7 +23,7 @@ namespace FarmingSimulatorSDKClient
         public string VehicleName { get; set; }
         public decimal Wear { get; set; }
         public long OperationTimeMinutes { get; set; }
-        public int Speed { get; set; }
+        public decimal Speed { get; set; }
         public decimal FuelMax { get; set; }
         public decimal Fuel { get; set; }
         public int RPMMin { get; set; }
