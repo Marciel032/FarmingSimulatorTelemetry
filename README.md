@@ -20,6 +20,8 @@ The project is still under development and future updates will focus on the foll
 - [x] Create field indicate if is in vehicle
 - [ ] Improve de mod icon
 - [ ] Read axis to platform motion simulator
+- [ ] Read wiper state when is snowing
+- [ ] Read horn state
 
 ## 💻 Prerequisites
 

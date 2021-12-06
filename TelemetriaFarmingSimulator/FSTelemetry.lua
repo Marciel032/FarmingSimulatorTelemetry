@@ -62,7 +62,7 @@ function FSTelemetry:ClearVehicleTelemetry()
 	FSContext.Telemetry.IsAiActive = false;
 	FSContext.Telemetry.Wear = 0.0;
 	FSContext.Telemetry.OperationTimeMinutes = 0;
-	FSContext.Telemetry.Speed = 0;
+	FSContext.Telemetry.Speed = 0.0;
 	FSContext.Telemetry.IsEngineStarted = false;
 	FSContext.Telemetry.Gear = 0;
 	FSContext.Telemetry.IsLightOn = false;
@@ -139,11 +139,7 @@ end
 
 function FSTelemetry:ProcessSpeed(vehicle, motorized)
 	if motorized ~= nil and vehicle.getLastSpeed ~= nil then
-		local lastSpeed = math.max(0, vehicle:getLastSpeed() * motorized.speedDisplayScale)
-		FSContext.Telemetry.Speed = math.floor(lastSpeed);
-		if math.abs(lastSpeed - FSContext.Telemetry.Speed) > 0.5 then
-			FSContext.Telemetry.Speed = FSContext.Telemetry.Speed + 1;
-		end
+		FSContext.Telemetry.Speed = math.max(0.0, vehicle:getLastSpeed() * motorized.speedDisplayScale)
 	else
 		FSContext.Telemetry.Speed = 0;
 	end;
