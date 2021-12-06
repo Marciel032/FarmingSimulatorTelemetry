@@ -87,6 +87,8 @@ namespace FarmingSimulatorSDKClient
                     convertedValue = ConvertLong(values[i]);
                 else if (type == typeof(string))
                     convertedValue = values[i];
+                else if (type.IsEnum)
+                    convertedValue = Enum.Parse(type, values[i]);
 
                 if (convertedValue != null)
                     propertyInfo.SetValue(telemetry, convertedValue);
