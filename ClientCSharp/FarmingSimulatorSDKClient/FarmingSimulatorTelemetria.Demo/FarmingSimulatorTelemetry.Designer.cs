@@ -68,6 +68,7 @@ namespace FarmingSimulatorTelemetria.Demo
             // 
             // label1
             // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(12, 428);
             this.label1.Name = "label1";
@@ -86,6 +87,7 @@ namespace FarmingSimulatorTelemetria.Demo
             this.Controls.Add(this.richTextBox1);
             this.Name = "FarmingSimulatorTelemetry";
             this.Text = "Farming Simulator Telemetry";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FarmingSimulatorTelemetry_FormClosed);
             this.ResumeLayout(false);
             this.PerformLayout();
 

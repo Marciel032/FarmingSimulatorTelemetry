@@ -76,19 +76,22 @@ namespace FarmingSimulatorSDKClient
                     continue;
 
                 object convertedValue = null;
-                if (propertyInfo.DeclaringType == typeof(decimal))
+                Type type = propertyInfo.PropertyType;
+                if (type == typeof(decimal))
                     convertedValue = ConvertDecimal(values[i]);
-                else if (propertyInfo.DeclaringType == typeof(bool))
+                else if (type == typeof(bool))
                     convertedValue = ConvertBoolean(values[i]);
-                else if (propertyInfo.DeclaringType == typeof(int))
+                else if (type == typeof(int))
                     convertedValue = ConvertInteger(values[i]);
-                else if (propertyInfo.DeclaringType == typeof(long))
+                else if (type == typeof(long))
                     convertedValue = ConvertLong(values[i]);
-                else if (propertyInfo.DeclaringType == typeof(string))
+                else if (type == typeof(string))
                     convertedValue = values[i];
+                else if (type.IsEnum)
+                    convertedValue = Enum.Parse(type, values[i]);
 
                 if (convertedValue != null)
-                    propertyInfo.SetValue(convertedValue, telemetry);
+                    propertyInfo.SetValue(telemetry, convertedValue);
             }
 
             OnTelemetryRead?.Invoke(telemetry);

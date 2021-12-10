@@ -32,7 +32,7 @@ namespace FarmingSimulatorSDKClient.PipeLineServer
         #region c'tor
         public InternalPipeServer(string pipeName, int maxNumberOfServerInstances)
         {
-            pipeServer = new NamedPipeServerStream(pipeName, PipeDirection.InOut, maxNumberOfServerInstances,
+            pipeServer = new NamedPipeServerStream(pipeName, PipeDirection.In, maxNumberOfServerInstances,
                 PipeTransmissionMode.Message, PipeOptions.Asynchronous);
             Id = Guid.NewGuid().ToString();
         }
