@@ -79,6 +79,7 @@ function FSTelemetry:ClearVehicleTelemetry()
 	FSTelemetry.Telemetry.MotorTemperature = 0.0;
 	FSTelemetry.Telemetry.VehiclePrice = 0.0;
 	FSTelemetry.Telemetry.VehicleSellPrice = 0.0;
+	FSTelemetry.Telemetry.IsHonkOn = false;
 end
 
 function FSTelemetry:IsDrivingVehicle()
@@ -95,6 +96,7 @@ function FSTelemetry:ProcessVehicleData()
 	local specDrivable = vehicle.spec_drivable;
 	local specLights = vehicle.spec_lights;
 	local specWipers = vehicle.spec_wipers;
+	local specHonk = vehicle.spec_honk;
 
 	FSTelemetry:ProcessPrice(vehicle);
 	FSTelemetry:ProcessMotorFanEnabled(specMotorized);
@@ -115,6 +117,7 @@ function FSTelemetry:ProcessVehicleData()
 	FSTelemetry:ProcessLightBeacon(specLights);
 	FSTelemetry:ProcessLight(specLights);
 	FSTelemetry:ProcessWiper(specWipers, mission);
+	FSTelemetry:ProcessHonk(specHonk);
 end
 
 function FSTelemetry:ProcessMotorFanEnabled(motorized)
@@ -321,6 +324,13 @@ function FSTelemetry:ProcessWiper(wipers, mission)
 				end
 			end
 		end
+	end;
+end
+
+function FSTelemetry:ProcessHonk(honk)
+	FSTelemetry.Telemetry.IsHonkOn = false;
+	if honk ~= nil and honk.isPlaying ~= nil then
+		FSTelemetry.Telemetry.IsHonkOn = honk.isPlaying;
 	end;
 end
 

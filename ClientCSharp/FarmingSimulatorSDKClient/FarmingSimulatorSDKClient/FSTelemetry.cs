@@ -46,7 +46,6 @@ namespace FarmingSimulatorSDKClient
     {
         public string Name { get; set; }
         public decimal Wear { get; set; }
-        //TODO - convert this to timestamp, current value is miliseconds
         public long OperationTimeMinutes { get; set; }
         public int Speed { get; set; }
         public decimal FuelMax { get; set; }
@@ -67,6 +66,7 @@ namespace FarmingSimulatorSDKClient
         public bool IsHandBreakeOn { get; set; }
         public bool IsDrivingVehicle { get; set; }
         public bool IsAIActive { get; set; }
+        public bool IsHonkOn { get; set; }
 
         public VehicleTelemetry()
         {
