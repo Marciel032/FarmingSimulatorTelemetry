@@ -328,9 +328,9 @@ function FSTelemetry:ProcessWiper(wipers, mission)
 end
 
 function FSTelemetry:ProcessHonk(honk)
-	FSTelemetry.Telemetry.IsHonkOn = false;
+	FSContext.Telemetry.IsHonkOn = false;
 	if honk ~= nil and honk.isPlaying ~= nil then
-		FSTelemetry.Telemetry.IsHonkOn = honk.isPlaying;
+		FSContext.Telemetry.IsHonkOn = honk.isPlaying;
 	end;
 end
 
