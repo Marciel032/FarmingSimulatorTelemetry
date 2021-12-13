@@ -51,6 +51,11 @@ namespace FarmingSimulatorSDKClient
         public decimal MotorTemperature { get; set; }
         public decimal VehiclePrice { get; set; }
         public decimal VehicleSellPrice { get; set; }
+        public bool IsHonkOn { get; set; }
+        public int[] AttachedImplementsPosition { get; set; }
+        public bool[] AttachedImplementsLowered { get; set; }
+        public bool[] AttachedImplementsSelected { get; set; }
+        public bool[] AttachedImplementsTurnedOn { get; set; }
         #endregion
     }
 

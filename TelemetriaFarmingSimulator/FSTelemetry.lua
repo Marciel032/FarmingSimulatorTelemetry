@@ -10,13 +10,13 @@ FSContext = {
 		RefreshRate = 300,
 		RefreshCurrent = -1
 	},
+	MaxDepthImplements = 10,
 	Telemetry = {}
 };
 
 function FSTelemetry:ini()
 	FSTelemetry:ClearGameTelemetry();
 	FSTelemetry:ClearVehicleTelemetry();
-	print("inicia")
 end
 
 function FSTelemetry:update(dt)
@@ -83,6 +83,11 @@ function FSTelemetry:ClearVehicleTelemetry()
 	FSContext.Telemetry.MotorTemperature = 0.0;
 	FSContext.Telemetry.VehiclePrice = 0.0;
 	FSContext.Telemetry.VehicleSellPrice = 0.0;
+	FSContext.Telemetry.IsHonkOn = false;
+	FSContext.Telemetry.AttachedImplementsPosition = {};
+	FSContext.Telemetry.AttachedImplementsLowered = {};
+	FSContext.Telemetry.AttachedImplementsSelected = {};
+	FSContext.Telemetry.AttachedImplementsTurnedOn = {};
 end
 
 function FSTelemetry:IsDrivingVehicle()
@@ -99,7 +104,8 @@ function FSTelemetry:ProcessVehicleData()
 	local specDrivable = vehicle.spec_drivable;
 	local specLights = vehicle.spec_lights;
 	local specWipers = vehicle.spec_wipers;
-
+	local specHonk = vehicle.spec_honk;	
+	
 	FSTelemetry:ProcessPrice(vehicle);
 	FSTelemetry:ProcessMotorFanEnabled(specMotorized);
 	FSTelemetry:ProcessMotorTemperature(specMotorized);
@@ -119,6 +125,45 @@ function FSTelemetry:ProcessVehicleData()
 	FSTelemetry:ProcessLightBeacon(specLights);
 	FSTelemetry:ProcessLight(specLights);
 	FSTelemetry:ProcessWiper(specWipers, mission);
+	FSTelemetry:ProcessHonk(specHonk);
+
+	FSContext.Telemetry.AttachedImplementsPosition = {};
+	FSContext.Telemetry.AttachedImplementsLowered = {};
+	FSContext.Telemetry.AttachedImplementsSelected = {};
+	FSContext.Telemetry.AttachedImplementsTurnedOn = {};
+	FSTelemetry:ProcessAttachedImplements(vehicle, false, 0, 0);
+end
+
+function FSTelemetry:ProcessAttachedImplements(vehicle, invertX, x, depth)
+	local attachedImplements = vehicle:getAttachedImplements()
+    for _, implement in pairs(attachedImplements) do
+		local object = implement.object
+		if object ~= nil and object.schemaOverlay ~= nil then
+			local selected = object:getIsSelected()
+            local turnedOn = object.getIsTurnedOn ~= nil and object:getIsTurnedOn()
+			local lowered = object.getIsLowered ~= nil and object:getIsLowered(true);
+            local jointDesc = vehicle.schemaOverlay.attacherJoints[implement.jointDescIndex]
+			if jointDesc ~= nil then
+				local invertX = invertX ~= jointDesc.invertX
+                local baseX
+                if invertX then
+                    baseX = x - 1 + (1 - jointDesc.x)
+                else
+                    baseX = x + jointDesc.x
+                end
+				baseX = math.ceil(baseX);
+
+				FSContext.Telemetry.AttachedImplementsPosition[baseX] = baseX;
+				FSContext.Telemetry.AttachedImplementsLowered[baseX] = lowered;
+				FSContext.Telemetry.AttachedImplementsSelected[baseX] = selected;
+				FSContext.Telemetry.AttachedImplementsTurnedOn[baseX] = turnedOn;
+				--print("baseX " .. baseX .. " lowered " .. tostring(lowered) .. " turnedOn " .. tostring(turnedOn) .. " selected " .. tostring(selected));
+				if FSContext.MaxDepthImplements > depth then
+					FSTelemetry:ProcessAttachedImplements(object, invertX, baseX, depth + 1)
+				end
+			end
+		end
+	end
 end
 
 function FSTelemetry:ProcessMotorFanEnabled(motorized)
@@ -324,6 +369,13 @@ function FSTelemetry:ProcessWiper(wipers, mission)
 	end;
 end
 
+function FSTelemetry:ProcessHonk(honk)
+	FSContext.Telemetry.IsHonkOn = false;
+	if honk ~= nil and honk.isPlaying ~= nil then
+		FSContext.Telemetry.IsHonkOn = honk.isPlaying;
+	end;
+end
+
 function FSTelemetry:ProcessGameData()
 	if g_currentMission.player ~= nil then
         local farm = g_farmManager:getFarmById(g_currentMission.player.farmId)
@@ -331,6 +383,8 @@ function FSTelemetry:ProcessGameData()
 			FSContext.Telemetry.Money = farm.money;
 			--g_currentMission.mission.missionInfo.money
 		end
+		--local posX, posY, posZ, rotY = g_currentMission.player:getPositionData();
+		--print(math.deg(-rotY % (2*math.pi)));
     end
 
 	if g_currentMission.environment ~= nil then
@@ -364,32 +418,47 @@ end
 function FSTelemetry:BuildBodyText()
 	local text = FSTelemetry:AddText("BODY", "");
 	for key, value in pairs(FSContext.Telemetry) do
-		local type = type(value);
-		if type == "boolean" then
-			text = FSTelemetry:AddTextBoolean(value, text);
-		elseif type == "string" then
-			text = FSTelemetry:AddText(value, text);
-		elseif type =="number" then
-			text = FSTelemetry:AddTextDecimal(value, text);
-		end
+		text = FSTelemetry:AddText(FSTelemetry:GetTextValue(value), text);
 	end
 	return text;
 end
 
-function FSTelemetry:AddTextDecimal(value, text)
-	local integerPart, floatPart = math.modf(value)	
+function FSTelemetry:GetTextValue(value)
+	local type = type(value);
+	local text = "";
+	if type == "boolean" then
+		text = FSTelemetry:GetTextBoolean(value);
+	elseif type == "string" then
+		text = value;
+	elseif type =="number" then
+		text = FSTelemetry:GetTextDecimal(value);
+	elseif type =="table" then
+		text = FSTelemetry:GetTextTable(value);
+	end;
+	return text;
+end
+
+function FSTelemetry:GetTextDecimal(value)
+	local integerPart, floatPart = math.modf(value);
 	local numberText;
 	if floatPart > 0 then
 		numberText = string.format("%.2f", value);
 	else
 		numberText = string.format("%d", integerPart);
 	end
-	return FSTelemetry:AddText(numberText, text);
+	return numberText;
 end
 
-function FSTelemetry:AddTextBoolean(value, text)
-	local textBoolean = value and "1" or "0";
-	return FSTelemetry:AddText(textBoolean, text);
+function FSTelemetry:GetTextBoolean(value)
+	return value and "1" or "0";
+end
+
+function FSTelemetry:GetTextTable(valueTable)
+	local text = "";
+	for key, value in pairs(valueTable) do
+		text = text .. FSTelemetry:GetTextValue(value) .. "¶";
+	end
+	return text;
 end
 
 function FSTelemetry:AddText(value, text)
