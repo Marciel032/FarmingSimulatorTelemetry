@@ -10,7 +10,7 @@ FSContext = {
 		RefreshRate = 300,
 		RefreshCurrent = -1
 	},
-	MaxDethImplements = 10,
+	MaxDepthImplements = 10,
 	Telemetry = {}
 };
 
@@ -131,10 +131,10 @@ function FSTelemetry:ProcessVehicleData()
 	FSContext.Telemetry.AttachedImplementsLowered = {};
 	FSContext.Telemetry.AttachedImplementsSelected = {};
 	FSContext.Telemetry.AttachedImplementsTurnedOn = {};
-	FSTelemetry:ProcessAttachedImplements(vehicle, false, 0, 0);	
+	FSTelemetry:ProcessAttachedImplements(vehicle, false, 0, 0);
 end
 
-function FSTelemetry:ProcessAttachedImplements(vehicle, invertX, x, deth)	
+function FSTelemetry:ProcessAttachedImplements(vehicle, invertX, x, depth)
 	local attachedImplements = vehicle:getAttachedImplements()
     for _, implement in pairs(attachedImplements) do
 		local object = implement.object
@@ -158,8 +158,8 @@ function FSTelemetry:ProcessAttachedImplements(vehicle, invertX, x, deth)
 				FSContext.Telemetry.AttachedImplementsSelected[baseX] = selected;
 				FSContext.Telemetry.AttachedImplementsTurnedOn[baseX] = turnedOn;
 				--print("baseX " .. baseX .. " lowered " .. tostring(lowered) .. " turnedOn " .. tostring(turnedOn) .. " selected " .. tostring(selected));
-				if FSContext.MaxDethImplements > deth then
-					FSTelemetry:ProcessAttachedImplements(object, invertX, baseX, deth + 1)
+				if FSContext.MaxDepthImplements > depth then
+					FSTelemetry:ProcessAttachedImplements(object, invertX, baseX, depth + 1)
 				end
 			end
 		end
@@ -425,6 +425,7 @@ end
 
 function FSTelemetry:GetTextValue(value)
 	local type = type(value);
+	local text = "";
 	if type == "boolean" then
 		text = FSTelemetry:GetTextBoolean(value);
 	elseif type == "string" then
@@ -438,7 +439,7 @@ function FSTelemetry:GetTextValue(value)
 end
 
 function FSTelemetry:GetTextDecimal(value)
-	local integerPart, floatPart = math.modf(value)	
+	local integerPart, floatPart = math.modf(value);
 	local numberText;
 	if floatPart > 0 then
 		numberText = string.format("%.2f", value);
