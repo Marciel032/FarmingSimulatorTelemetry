@@ -19,6 +19,7 @@ namespace FarmingSimulatorSDKClient
         private PipeServer pipeServer;
         private Dictionary<string, PropertyInfo> telemetryProperties;
         private Dictionary<short, PropertyInfo> telemetryIndexes;
+        private bool active;
         public event OnTelemetryRead OnTelemetryRead;        
 
         public FSTelemetryReader()
@@ -40,10 +41,12 @@ namespace FarmingSimulatorSDKClient
 
         public void Start() {
             pipeServer.Start();
+            active = true;
         }
 
         public void Stop() {
             pipeServer.Stop();
+            active = false;
         }
 
         private void InitializeTelemetryProperties() {
@@ -75,52 +78,73 @@ namespace FarmingSimulatorSDKClient
                 if (!telemetryIndexes.TryGetValue(i, out var propertyInfo))
                     continue;
 
-                object convertedValue = null;
-                Type type = propertyInfo.PropertyType;
-                if (type == typeof(decimal))
-                    convertedValue = ConvertDecimal(values[i]);
-                else if (type == typeof(bool))
-                    convertedValue = ConvertBoolean(values[i]);
-                else if (type == typeof(int))
-                    convertedValue = ConvertInteger(values[i]);
-                else if (type == typeof(long))
-                    convertedValue = ConvertLong(values[i]);
-                else if (type == typeof(string))
-                    convertedValue = values[i];
-                else if (type.IsEnum)
-                    convertedValue = Enum.Parse(type, values[i]);
+                object convertedValue = ConvertToType(propertyInfo.PropertyType, values[i]);                
 
                 if (convertedValue != null)
                     propertyInfo.SetValue(telemetry, convertedValue);
             }
 
-            OnTelemetryRead?.Invoke(telemetry);
+            if(active)
+                OnTelemetryRead?.Invoke(telemetry);
         }
-        private decimal ConvertDecimal(string valor) {
-            if (decimal.TryParse(valor, NumberStyles.Any, CultureInfo.GetCultureInfo("en-US"),  out var numero))
+
+        private object ConvertToType(Type type, string value) {
+            if (type == typeof(decimal))
+                return ConvertDecimal(value);
+            else if (type == typeof(bool))
+                return ConvertBoolean(value);
+            else if (type == typeof(int))
+                return ConvertInteger(value);
+            else if (type == typeof(long))
+                return ConvertLong(value);
+            else if (type == typeof(string))
+                return value;
+            else if (type.IsEnum)
+                return Enum.Parse(type, value);
+            else if (type.IsArray)
+                return ConvertArray(type, value);
+
+            return null;
+        }
+
+        private decimal ConvertDecimal(string value) {
+            if (decimal.TryParse(value, NumberStyles.Any, CultureInfo.GetCultureInfo("en-US"),  out var numero))
                 return numero;
 
             return 0m;
         }
 
-        private long ConvertLong(string valor) {
-            if (long.TryParse(valor, out var resultado))
+        private long ConvertLong(string value) {
+            if (long.TryParse(value, out var resultado))
                 return resultado;
 
             return 0;
         }
 
-        private int ConvertInteger(string valor)
+        private int ConvertInteger(string value)
         {
-            if (int.TryParse(valor, out var resultado))
+            if (int.TryParse(value, out var resultado))
                 return resultado;
 
             return 0;
         }
 
-        private bool ConvertBoolean(string valor)
+        private bool ConvertBoolean(string value)
         {
-            return valor.Trim() == "1";
+            return value.Trim() == "1";
+        }
+
+        private Array ConvertArray(Type type, string value)
+        {
+            var elementType = type.GetElementType();
+            var textValues = value.Split('¶');
+            var array = Array.CreateInstance(elementType, textValues.Length - 1);
+            for (int i = 0; i < textValues.Length - 1; i++)
+            {
+                array.SetValue(ConvertToType(elementType, textValues[i]), i);
+            }
+
+            return array;
         }
     }
 }
