@@ -14,10 +14,10 @@ FSContext = {
 	Telemetry = {}
 };
 
-function FSTelemetry:ini()
+function FSTelemetry:loadMap(name)
 	FSTelemetry:ClearGameTelemetry();
 	FSTelemetry:ClearVehicleTelemetry();
-end
+end;
 
 function FSTelemetry:update(dt)
 	FSContext.UpdateInterval.Current = FSContext.UpdateInterval.Current + dt;
@@ -88,6 +88,7 @@ function FSTelemetry:ClearVehicleTelemetry()
 	FSContext.Telemetry.AttachedImplementsLowered = {};
 	FSContext.Telemetry.AttachedImplementsSelected = {};
 	FSContext.Telemetry.AttachedImplementsTurnedOn = {};
+	FSContext.Telemetry.AngleRotation = 0.0;
 end
 
 function FSTelemetry:IsDrivingVehicle()
@@ -105,7 +106,7 @@ function FSTelemetry:ProcessVehicleData()
 	local specLights = vehicle.spec_lights;
 	local specWipers = vehicle.spec_wipers;
 	local specHonk = vehicle.spec_honk;	
-	
+		
 	FSTelemetry:ProcessPrice(vehicle);
 	FSTelemetry:ProcessMotorFanEnabled(specMotorized);
 	FSTelemetry:ProcessMotorTemperature(specMotorized);
@@ -131,7 +132,9 @@ function FSTelemetry:ProcessVehicleData()
 	FSContext.Telemetry.AttachedImplementsLowered = {};
 	FSContext.Telemetry.AttachedImplementsSelected = {};
 	FSContext.Telemetry.AttachedImplementsTurnedOn = {};
-	FSTelemetry:ProcessAttachedImplements(vehicle, false, 0, 0);	
+	FSTelemetry:ProcessAttachedImplements(vehicle, false, 0, 0);
+
+	FSTelemetry:ProcessAngleRotation(vehicle);
 end
 
 function FSTelemetry:ProcessAttachedImplements(vehicle, invertX, x, deth)	
@@ -157,7 +160,6 @@ function FSTelemetry:ProcessAttachedImplements(vehicle, invertX, x, deth)
 				FSContext.Telemetry.AttachedImplementsLowered[baseX] = lowered;
 				FSContext.Telemetry.AttachedImplementsSelected[baseX] = selected;
 				FSContext.Telemetry.AttachedImplementsTurnedOn[baseX] = turnedOn;
-				--print("baseX " .. baseX .. " lowered " .. tostring(lowered) .. " turnedOn " .. tostring(turnedOn) .. " selected " .. tostring(selected));
 				if FSContext.MaxDethImplements > deth then
 					FSTelemetry:ProcessAttachedImplements(object, invertX, baseX, deth + 1)
 				end
@@ -374,6 +376,23 @@ function FSTelemetry:ProcessHonk(honk)
 	if honk ~= nil and honk.isPlaying ~= nil then
 		FSContext.Telemetry.IsHonkOn = honk.isPlaying;
 	end;
+end
+
+function FSTelemetry:ProcessAngleRotation(vehicle)
+	local x,y,z = localDirectionToWorld(vehicle.rootNode, 0, 0, 1);
+	local length = MathUtil.vector2Length(x,z);
+	local dX = x/length
+	local dZ = z/length
+	local direction = 180 - math.deg(math.atan2(dX,dZ))
+	--local rX, rY, rZ = getRotation(vehicle.rootNode)
+	--print(math.deg(rY % (2*math.pi)));
+	--local posX, posY, posZ, rotY = g_currentMission.player:getPositionData();
+	--print(math.deg(-rotY % (2*math.pi)));
+
+	--local posX, posY, posZ = getTranslation(vehicle.rootNode)
+	--print("posX: " .. posX .. "posZ: " .. posZ);
+
+	FSContext.Telemetry.AngleRotation = direction;
 end
 
 function FSTelemetry:ProcessGameData()
