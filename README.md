@@ -22,6 +22,7 @@ The project is still under development and future updates will focus on the foll
 - [ ] Read axis to platform motion simulator
 - [ ] Read wiper state when is snowing
 - [x] Read horn state
+- [x] Read attached implements state
 
 ## 💻 Prerequisites
 
@@ -84,6 +85,12 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * MotorTemperature
 * VehiclePrice
 * VehicleSellPrice
+* IsHonkOn
+* AttachedImplementsPosition
+* AttachedImplementsLowered
+* AttachedImplementsSelected
+* AttachedImplementsTurnedOn
+* AngleRotation
 
 ### Game
 * Money
