@@ -90,6 +90,7 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * AttachedImplementsLowered
 * AttachedImplementsSelected
 * AttachedImplementsTurnedOn
+* AngleRotation
 
 ### Game
 * Money
