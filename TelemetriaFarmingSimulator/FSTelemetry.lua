@@ -108,7 +108,8 @@ function FSTelemetry:ProcessVehicleData()
 	local specDrivable = vehicle.spec_drivable;
 	local specLights = vehicle.spec_lights;
 	local specWipers = vehicle.spec_wipers;
-	local specHonk = vehicle.spec_honk;	
+	local specHonk = vehicle.spec_honk;
+	local specWearable = vehicle.spec_wearable;
 		
 	FSTelemetry:ProcessPrice(vehicle);
 	FSTelemetry:ProcessMotorFanEnabled(specMotorized);
@@ -120,7 +121,7 @@ function FSTelemetry:ProcessVehicleData()
 	FSTelemetry:ProcessEngineStarted(specMotorized);
 	FSTelemetry:ProcessVehicleName(mission);
 	FSTelemetry:ProcessAiActive(vehicle);
-	FSTelemetry:ProcessWear(vehicle);
+	FSTelemetry:ProcessWear(specWearable);
 	FSTelemetry:ProcessOperationTime(vehicle);
 	FSTelemetry:ProcessFuelLevelAndCapacity(vehicle);
 	FSTelemetry:ProcessCruiseControl(specDrivable);
@@ -258,9 +259,9 @@ function FSTelemetry:ProcessAiActive(vehicle)
 	FSContext.Telemetry.IsAiActive = vehicle.getIsAIActive ~= nil and vehicle:getIsAIActive();
 end
 
-function FSTelemetry:ProcessWear(vehicle)
-	if vehicle.getWearTotalAmount ~= nil and vehicle:getWearTotalAmount() ~= nil then
-		FSContext.Telemetry.Wear = vehicle:getWearTotalAmount();
+function FSTelemetry:ProcessWear(wearable)
+	if wearable ~= nil and wearable.totalAmount ~= nil then
+		FSContext.Telemetry.Wear = wearable.totalAmount;
 	else
 		FSContext.Telemetry.Wear = 0;
 	end;
