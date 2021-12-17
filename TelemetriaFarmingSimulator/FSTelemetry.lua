@@ -89,6 +89,8 @@ function FSTelemetry:ClearVehicleTelemetry()
 	FSContext.Telemetry.AttachedImplementsSelected = {};
 	FSContext.Telemetry.AttachedImplementsTurnedOn = {};
 	FSContext.Telemetry.AngleRotation = 0.0;
+	FSContext.Telemetry.Mass = 0.0;
+	FSContext.Telemetry.TotalMass = 0.0;
 end
 
 function FSTelemetry:IsDrivingVehicle()
@@ -133,7 +135,9 @@ function FSTelemetry:ProcessVehicleData()
 	FSContext.Telemetry.AttachedImplementsSelected = {};
 	FSContext.Telemetry.AttachedImplementsTurnedOn = {};
 	FSTelemetry:ProcessAttachedImplements(vehicle, false, 0, 0);
+
 	FSTelemetry:ProcessAngleRotation(vehicle);
+	FSTelemetry:ProcessMass(vehicle);
 end
 
 function FSTelemetry:ProcessAttachedImplements(vehicle, invertX, x, depth)
@@ -394,6 +398,16 @@ function FSTelemetry:ProcessAngleRotation(vehicle)
 	FSContext.Telemetry.AngleRotation = direction;
 end
 
+function FSTelemetry:ProcessMass(vehicle)
+	if vehicle.getTotalMass ~= nil then
+		FSContext.Telemetry.Mass = vehicle:getTotalMass(true);
+		FSContext.Telemetry.TotalMass = vehicle:getTotalMass(false);
+	else
+		FSContext.Telemetry.Mass = 0.0;
+		FSContext.Telemetry.TotalMass = 0.0;
+	end
+end
+
 function FSTelemetry:ProcessGameData()
 	if g_currentMission.player ~= nil then
         local farm = g_farmManager:getFarmById(g_currentMission.player.farmId)
@@ -401,8 +415,6 @@ function FSTelemetry:ProcessGameData()
 			FSContext.Telemetry.Money = farm.money;
 			--g_currentMission.mission.missionInfo.money
 		end
-		--local posX, posY, posZ, rotY = g_currentMission.player:getPositionData();
-		--print(math.deg(-rotY % (2*math.pi)));
     end
 
 	if g_currentMission.environment ~= nil then
