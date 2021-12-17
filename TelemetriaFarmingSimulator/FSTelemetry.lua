@@ -91,6 +91,7 @@ function FSTelemetry:ClearVehicleTelemetry()
 	FSContext.Telemetry.AngleRotation = 0.0;
 	FSContext.Telemetry.Mass = 0.0;
 	FSContext.Telemetry.TotalMass = 0.0;
+	FSContext.Telemetry.IsOnField = false;
 end
 
 function FSTelemetry:IsDrivingVehicle()
@@ -138,6 +139,7 @@ function FSTelemetry:ProcessVehicleData()
 
 	FSTelemetry:ProcessAngleRotation(vehicle);
 	FSTelemetry:ProcessMass(vehicle);
+	FSTelemetry:ProcessOnField(vehicle);
 end
 
 function FSTelemetry:ProcessAttachedImplements(vehicle, invertX, x, depth)
@@ -406,6 +408,10 @@ function FSTelemetry:ProcessMass(vehicle)
 		FSContext.Telemetry.Mass = 0.0;
 		FSContext.Telemetry.TotalMass = 0.0;
 	end
+end
+
+function FSTelemetry:ProcessOnField(vehicle)
+	FSContext.Telemetry.IsOnField = vehicle.getIsOnField ~= nil and vehicle:getIsOnField();
 end
 
 function FSTelemetry:ProcessGameData()

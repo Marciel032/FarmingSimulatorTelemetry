@@ -93,6 +93,7 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * AngleRotation
 * Mass
 * TotalMass
+* IsOnField
 
 ### Game
 * Money
