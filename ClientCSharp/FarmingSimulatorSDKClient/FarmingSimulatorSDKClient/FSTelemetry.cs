@@ -57,6 +57,9 @@ namespace FarmingSimulatorSDKClient
         public bool[] AttachedImplementsSelected { get; set; }
         public bool[] AttachedImplementsTurnedOn { get; set; }
         public decimal AngleRotation { get; set; }
+        public decimal  Mass { get; set; }
+        public decimal TotalMass { get; set; }
+        public bool IsOnField { get; set; }
         #endregion
     }
 
