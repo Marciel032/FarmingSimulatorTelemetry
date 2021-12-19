@@ -261,7 +261,7 @@ end
 
 function FSTelemetry:ProcessWear(wearable)
 	if wearable ~= nil and wearable.totalAmount ~= nil then
-		FSContext.Telemetry.Wear = wearable.totalAmount;
+		FSContext.Telemetry.Wear = wearable.damage;
 	else
 		FSContext.Telemetry.Wear = 0;
 	end;
