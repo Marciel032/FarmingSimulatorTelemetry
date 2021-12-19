@@ -89,6 +89,9 @@ function FSTelemetry:ClearVehicleTelemetry()
 	FSContext.Telemetry.AttachedImplementsSelected = {};
 	FSContext.Telemetry.AttachedImplementsTurnedOn = {};
 	FSContext.Telemetry.AngleRotation = 0.0;
+	FSContext.Telemetry.Mass = 0.0;
+	FSContext.Telemetry.TotalMass = 0.0;
+	FSContext.Telemetry.IsOnField = false;
 end
 
 function FSTelemetry:IsDrivingVehicle()
@@ -105,7 +108,8 @@ function FSTelemetry:ProcessVehicleData()
 	local specDrivable = vehicle.spec_drivable;
 	local specLights = vehicle.spec_lights;
 	local specWipers = vehicle.spec_wipers;
-	local specHonk = vehicle.spec_honk;	
+	local specHonk = vehicle.spec_honk;
+	local specWearable = vehicle.spec_wearable;
 		
 	FSTelemetry:ProcessPrice(vehicle);
 	FSTelemetry:ProcessMotorFanEnabled(specMotorized);
@@ -117,7 +121,7 @@ function FSTelemetry:ProcessVehicleData()
 	FSTelemetry:ProcessEngineStarted(specMotorized);
 	FSTelemetry:ProcessVehicleName(mission);
 	FSTelemetry:ProcessAiActive(vehicle);
-	FSTelemetry:ProcessWear(vehicle);
+	FSTelemetry:ProcessWear(specWearable);
 	FSTelemetry:ProcessOperationTime(vehicle);
 	FSTelemetry:ProcessFuelLevelAndCapacity(vehicle);
 	FSTelemetry:ProcessCruiseControl(specDrivable);
@@ -133,7 +137,10 @@ function FSTelemetry:ProcessVehicleData()
 	FSContext.Telemetry.AttachedImplementsSelected = {};
 	FSContext.Telemetry.AttachedImplementsTurnedOn = {};
 	FSTelemetry:ProcessAttachedImplements(vehicle, false, 0, 0);
+
 	FSTelemetry:ProcessAngleRotation(vehicle);
+	FSTelemetry:ProcessMass(vehicle);
+	FSTelemetry:ProcessOnField(vehicle);
 end
 
 function FSTelemetry:ProcessAttachedImplements(vehicle, invertX, x, depth)
@@ -252,9 +259,9 @@ function FSTelemetry:ProcessAiActive(vehicle)
 	FSContext.Telemetry.IsAiActive = vehicle.getIsAIActive ~= nil and vehicle:getIsAIActive();
 end
 
-function FSTelemetry:ProcessWear(vehicle)
-	if vehicle.getWearTotalAmount ~= nil and vehicle:getWearTotalAmount() ~= nil then
-		FSContext.Telemetry.Wear = vehicle:getWearTotalAmount();
+function FSTelemetry:ProcessWear(wearable)
+	if wearable ~= nil and wearable.totalAmount ~= nil then
+		FSContext.Telemetry.Wear = wearable.totalAmount;
 	else
 		FSContext.Telemetry.Wear = 0;
 	end;
@@ -394,6 +401,20 @@ function FSTelemetry:ProcessAngleRotation(vehicle)
 	FSContext.Telemetry.AngleRotation = direction;
 end
 
+function FSTelemetry:ProcessMass(vehicle)
+	if vehicle.getTotalMass ~= nil then
+		FSContext.Telemetry.Mass = vehicle:getTotalMass(true);
+		FSContext.Telemetry.TotalMass = vehicle:getTotalMass(false);
+	else
+		FSContext.Telemetry.Mass = 0.0;
+		FSContext.Telemetry.TotalMass = 0.0;
+	end
+end
+
+function FSTelemetry:ProcessOnField(vehicle)
+	FSContext.Telemetry.IsOnField = vehicle.getIsOnField ~= nil and vehicle:getIsOnField();
+end
+
 function FSTelemetry:ProcessGameData()
 	if g_currentMission.player ~= nil then
         local farm = g_farmManager:getFarmById(g_currentMission.player.farmId)
@@ -401,8 +422,6 @@ function FSTelemetry:ProcessGameData()
 			FSContext.Telemetry.Money = farm.money;
 			--g_currentMission.mission.missionInfo.money
 		end
-		--local posX, posY, posZ, rotY = g_currentMission.player:getPositionData();
-		--print(math.deg(-rotY % (2*math.pi)));
     end
 
 	if g_currentMission.environment ~= nil then
