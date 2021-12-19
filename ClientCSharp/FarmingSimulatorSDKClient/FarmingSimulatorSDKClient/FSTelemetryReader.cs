@@ -61,7 +61,12 @@ namespace FarmingSimulatorSDKClient
             for (short i = 1; i < headers.Length - 1; i++)
             {
                 if (!telemetryProperties.TryGetValue(headers[i].ToLower(), out var propertyInfo))
+                {
+                    Console.WriteLine($"Property not found. {headers[i]}");
+                    if (telemetryIndexes.ContainsKey(i))
+                        telemetryIndexes.Remove(i);
                     continue;
+                }
 
 
                 if (!telemetryIndexes.ContainsKey(i))
