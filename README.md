@@ -60,6 +60,7 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * Speed 
 * FuelMax 
 * Fuel 
+* FuelType
 * RPMMin
 * RPMMax 
 * RPM 
@@ -90,10 +91,13 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * AttachedImplementsLowered
 * AttachedImplementsSelected
 * AttachedImplementsTurnedOn
+* AttachedImplementsWear
 * AngleRotation
 * Mass
 * TotalMass
 * IsOnField
+* Def
+* DefMax
 
 ### Game
 * Money

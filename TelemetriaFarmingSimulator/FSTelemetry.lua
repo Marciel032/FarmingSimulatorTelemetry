@@ -388,11 +388,11 @@ end
 function FSTelemetry:ProcessWiper(wipers, mission)
 	FSContext.Telemetry.IsWipersOn = false;
 	if wipers ~= nil and wipers.hasWipers then
-		local rainScale = (mission.environment ~= nil and mission.environment.weather ~= nil and mission.environment.weather.getRainFallScale ~= nil) and mission.environment.weather:getRainFallScale() or 0;		
+		local rainScale = (mission.environment ~= nil and mission.environment.weather ~= nil and mission.environment.weather.getRainFallScale ~= nil) and mission.environment.weather:getRainFallScale() or 0;
 		if rainScale > 0 then
 			for _, wiper in pairs(wipers.wipers) do
-				for stateIndex,state in ipairs(wiper.states) do					
-					if rainScale <= state.maxRainValue then						
+				for stateIndex,state in ipairs(wiper.states) do
+					if rainScale <= state.maxRainValue then
 						FSContext.Telemetry.IsWipersOn = true;
 						return
 					end
