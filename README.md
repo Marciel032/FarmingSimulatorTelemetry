@@ -98,6 +98,8 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * IsOnField
 * Def
 * DefMax
+* Air
+* AirMax
 
 ### Game
 * Money

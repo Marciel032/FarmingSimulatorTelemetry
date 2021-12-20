@@ -65,6 +65,8 @@ namespace FarmingSimulatorSDKClient
         public bool IsOnField { get; set; }
         public decimal DefMax { get; set; }
         public decimal Def { get; set; }
+        public decimal AirMax { get; set; }
+        public decimal Air { get; set; }
         #endregion
     }
 

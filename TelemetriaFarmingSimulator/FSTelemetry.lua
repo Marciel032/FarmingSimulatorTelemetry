@@ -93,6 +93,8 @@ function FSTelemetry:ClearVehicleTelemetry()
 	FSContext.Telemetry.IsOnField = false;
 	FSContext.Telemetry.DefMax = 0.0;
 	FSContext.Telemetry.Def = 0.0;
+	FSContext.Telemetry.AirMax = 0.0;
+	FSContext.Telemetry.Air = 0.0;
 	FSTelemetry:ClearAttachedImplements();
 end
 
@@ -149,6 +151,7 @@ function FSTelemetry:ProcessVehicleData()
 	FSTelemetry:ProcessMass(vehicle);
 	FSTelemetry:ProcessOnField(vehicle);
 	FSTelemetry:ProcessDef(vehicle);
+	FSTelemetry:ProcessAir(vehicle);
 end
 
 function FSTelemetry:ProcessAttachedImplements(vehicle, invertX, x, depth)
@@ -451,6 +454,19 @@ function FSTelemetry:ProcessDef(vehicle)
 	end
 	FSContext.Telemetry.DefMax = 0.0;
 	FSContext.Telemetry.Def = 0.0;
+end
+
+function FSTelemetry:ProcessAir(vehicle, motorized)
+	if vehicle.getConsumerFillUnitIndex ~= nil then
+		local fillUnitIndex = vehicle:getConsumerFillUnitIndex(FillType.AIR);
+		if fillUnitIndex ~= nil then
+			FSContext.Telemetry.Air = vehicle:getFillUnitFillLevel(fillUnitIndex);
+			FSContext.Telemetry.AirMax = vehicle:getFillUnitCapacity(fillUnitIndex);
+			return;
+		end
+	end
+	FSContext.Telemetry.AirMax = 0.0;
+	FSContext.Telemetry.Air = 0.0;
 end
 
 function FSTelemetry:ProcessGameData()
