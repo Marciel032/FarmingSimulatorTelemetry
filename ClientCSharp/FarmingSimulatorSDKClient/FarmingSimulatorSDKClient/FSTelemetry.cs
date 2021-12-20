@@ -27,6 +27,7 @@ namespace FarmingSimulatorSDKClient
         public decimal Speed { get; set; }
         public decimal FuelMax { get; set; }
         public decimal Fuel { get; set; }
+        public FuelType FuelType { get; set; }
         public int RPMMin { get; set; }
         public int RPMMax { get; set; }
         public int RPM { get; set; }
@@ -82,5 +83,12 @@ namespace FarmingSimulatorSDKClient
     public enum GameEditionType : short {
         FS_19 = 19,
         FS_22 = 22
+    }
+
+    public enum FuelType : short {
+        Undefined,
+        Diesel,
+        Eletric,
+        Methane
     }
 }

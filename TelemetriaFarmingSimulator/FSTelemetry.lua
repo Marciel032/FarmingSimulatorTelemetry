@@ -55,6 +55,7 @@ end
 
 function FSTelemetry:ClearVehicleTelemetry()
 	FSContext.Telemetry.VehicleName = "";
+	FSContext.Telemetry.FuelType = 0;  --0 Undefined | 1 Diesel | 2 Eletric | 3 Methane
 	FSContext.Telemetry.FuelMax = 0.0;
 	FSContext.Telemetry.Fuel = 0.0;
 	FSContext.Telemetry.RPMMin = 0;
@@ -130,7 +131,7 @@ function FSTelemetry:ProcessVehicleData()
 	FSTelemetry:ProcessAiActive(vehicle);
 	FSTelemetry:ProcessWear(specWearable);
 	FSTelemetry:ProcessOperationTime(vehicle);
-	FSTelemetry:ProcessFuelLevelAndCapacity(vehicle);
+	FSTelemetry:ProcessFuel(vehicle);
 	FSTelemetry:ProcessCruiseControl(specDrivable);
 	FSTelemetry:ProcessHandBrake(specDrivable);
 	FSTelemetry:ProcessTurnLightsHazard(specLights);
@@ -285,20 +286,35 @@ function FSTelemetry:ProcessOperationTime(vehicle)
 	end;
 end
 
-function FSTelemetry:ProcessFuelLevelAndCapacity(vehicle)
-	--TODO: GET CURRENT FILL TYPE
-	local fuelFillType = vehicle:getConsumerFillUnitIndex(FillType.DIESEL)
-	if vehicle.getFillUnitCapacity ~= nil then
-		FSContext.Telemetry.FuelMax = vehicle:getFillUnitCapacity(fuelFillType);
-	else
-		FSContext.Telemetry.FuelMax = 0;
-	end;
+function FSTelemetry:ProcessFuel(vehicle, motorized)
+	--FillType.DEF
+	FSContext.Telemetry.FuelType = 0;
+	FSContext.Telemetry.FuelMax = 0;
+	FSContext.Telemetry.Fuel = 0;
 
-	if vehicle.getFillUnitFillLevel ~= nil then
-		FSContext.Telemetry.Fuel = vehicle:getFillUnitFillLevel(fuelFillType);
-	else
-		FSContext.Telemetry.Fuel = 0;
-	end;
+	if motorized == nil then
+		return;
+	end
+
+	for _, consumer in pairs(motorized.consumersByFillTypeName) do
+		if consumer.fillType == FillType.DIESEL then
+			FSContext.Telemetry.FuelType = 1;
+		elseif consumer.fillType == FillType.ELECTRICCHARGE then
+			FSContext.Telemetry.FuelType = 2;
+		elseif consumer.fillType == FillType.METHANE then
+			FSContext.Telemetry.FuelType = 3;
+		end
+
+		if FSContext.Telemetry.FuelType > 0 then
+			if vehicle.getFillUnitCapacity ~= nil then
+				FSContext.Telemetry.FuelMax = vehicle:getFillUnitCapacity(consumer.fillUnitIndex);
+			end;
+			if vehicle.getFillUnitFillLevel ~= nil then
+				FSContext.Telemetry.Fuel = vehicle:getFillUnitFillLevel(consumer.fillUnitIndex);
+			end;
+			return;
+		end
+	end
 end
 
 function FSTelemetry:ProcessCruiseControl(drivable)
