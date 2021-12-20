@@ -104,6 +104,7 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * CurrentWeather
 * NextWeather
 * CurrentDay
+* GameEdition
 
 ## 📫 Contributing to the project
 To contribute, follow these steps:

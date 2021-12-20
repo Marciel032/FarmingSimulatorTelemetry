@@ -1,5 +1,5 @@
 FSTelemetry = {}
-FSContext = {	
+local FSContext = {
 	UpdateInterval = {
 		Target = 16.66, --Restrict to 60 FPS. 16.66 = 1000ms / 60 frames
 		Current = 0.0
@@ -17,6 +17,7 @@ FSContext = {
 function FSTelemetry:loadMap(name)
 	FSTelemetry:ClearGameTelemetry();
 	FSTelemetry:ClearVehicleTelemetry();
+	FSTelemetry:ProcessGameEdition();
 end;
 
 function FSTelemetry:update(dt)
@@ -49,6 +50,7 @@ function FSTelemetry:ClearGameTelemetry()
 	FSContext.Telemetry.WeatherCurrent = 0;
 	FSContext.Telemetry.WeatherNext = 0;
 	FSContext.Telemetry.Day = 0;
+	FSContext.Telemetry.GameEdition = 0;
 end
 
 function FSTelemetry:ClearVehicleTelemetry()
@@ -441,6 +443,13 @@ function FSTelemetry:ProcessGameData()
 	end
 end
 
+function FSTelemetry:ProcessGameEdition()
+	FSContext.Telemetry.GameEdition = 19;
+	if g_minModDescVersion == 60 then
+		FSContext.Telemetry.GameEdition = 22;
+	end
+end
+
 function  FSTelemetry:BuildHeaderText()
 	local text = FSTelemetry:AddText("HEADER", "");
 	for k, v in pairs(FSContext.Telemetry) do
@@ -522,7 +531,7 @@ function FSTelemetry:RefreshPipe()
 		end
 
 		FSContext.PipeControl.Pipe = io.open(FSContext.PipeControl.PipeName, "w");
-	end	
+	end
 end
 
 addModEventListener(FSTelemetry);
