@@ -456,12 +456,12 @@ function FSTelemetry:ProcessDef(vehicle)
 	FSContext.Telemetry.Def = 0.0;
 end
 
-function FSTelemetry:ProcessAir(vehicle, motorized)
+function FSTelemetry:ProcessAir(vehicle)
 	if vehicle.getConsumerFillUnitIndex ~= nil then
 		local fillUnitIndex = vehicle:getConsumerFillUnitIndex(FillType.AIR);
 		if fillUnitIndex ~= nil then
-			FSContext.Telemetry.Air = vehicle:getFillUnitFillLevel(fillUnitIndex);
-			FSContext.Telemetry.AirMax = vehicle:getFillUnitCapacity(fillUnitIndex);
+			FSContext.Telemetry.Air = vehicle.getFillUnitFillLevel ~= nil and vehicle:getFillUnitFillLevel(fillUnitIndex) or 0.0;
+			FSContext.Telemetry.AirMax = vehicle.getFillUnitFillLevel ~= nil and vehicle:getFillUnitCapacity(fillUnitIndex) or 0.0;
 			return;
 		end
 	end
