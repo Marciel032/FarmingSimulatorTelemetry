@@ -91,6 +91,8 @@ function FSTelemetry:ClearVehicleTelemetry()
 	FSContext.Telemetry.Mass = 0.0;
 	FSContext.Telemetry.TotalMass = 0.0;
 	FSContext.Telemetry.IsOnField = false;
+	FSContext.Telemetry.DefMax = 0.0;
+	FSContext.Telemetry.Def = 0.0;
 	FSTelemetry:ClearAttachedImplements();
 end
 
@@ -146,6 +148,7 @@ function FSTelemetry:ProcessVehicleData()
 	FSTelemetry:ProcessAngleRotation(vehicle);
 	FSTelemetry:ProcessMass(vehicle);
 	FSTelemetry:ProcessOnField(vehicle);
+	FSTelemetry:ProcessDef(vehicle);
 end
 
 function FSTelemetry:ProcessAttachedImplements(vehicle, invertX, x, depth)
@@ -287,7 +290,6 @@ function FSTelemetry:ProcessOperationTime(vehicle)
 end
 
 function FSTelemetry:ProcessFuel(vehicle, motorized)
-	--FillType.DEF
 	FSContext.Telemetry.FuelType = 0;
 	FSContext.Telemetry.FuelMax = 0;
 	FSContext.Telemetry.Fuel = 0;
@@ -436,6 +438,19 @@ end
 
 function FSTelemetry:ProcessOnField(vehicle)
 	FSContext.Telemetry.IsOnField = vehicle.getIsOnField ~= nil and vehicle:getIsOnField();
+end
+
+function FSTelemetry:ProcessDef(vehicle)
+	if vehicle.getConsumerFillUnitIndex ~= nil then
+		local fillUnitIndex = vehicle:getConsumerFillUnitIndex(FillType.DEF);
+		if fillUnitIndex ~= nil then
+			FSContext.Telemetry.Def = vehicle:getFillUnitFillLevel(fillUnitIndex);
+			FSContext.Telemetry.DefMax = vehicle:getFillUnitCapacity(fillUnitIndex);
+			return;
+		end
+	end
+	FSContext.Telemetry.DefMax = 0.0;
+	FSContext.Telemetry.Def = 0.0;
 end
 
 function FSTelemetry:ProcessGameData()
