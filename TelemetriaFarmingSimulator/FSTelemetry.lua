@@ -86,14 +86,19 @@ function FSTelemetry:ClearVehicleTelemetry()
 	FSContext.Telemetry.VehiclePrice = 0.0;
 	FSContext.Telemetry.VehicleSellPrice = 0.0;
 	FSContext.Telemetry.IsHonkOn = false;
-	FSContext.Telemetry.AttachedImplementsPosition = {};
-	FSContext.Telemetry.AttachedImplementsLowered = {};
-	FSContext.Telemetry.AttachedImplementsSelected = {};
-	FSContext.Telemetry.AttachedImplementsTurnedOn = {};
 	FSContext.Telemetry.AngleRotation = 0.0;
 	FSContext.Telemetry.Mass = 0.0;
 	FSContext.Telemetry.TotalMass = 0.0;
 	FSContext.Telemetry.IsOnField = false;
+	FSTelemetry:ClearAttachedImplements();
+end
+
+function FSTelemetry:ClearAttachedImplements()
+	FSContext.Telemetry.AttachedImplementsPosition = {};
+	FSContext.Telemetry.AttachedImplementsLowered = {};
+	FSContext.Telemetry.AttachedImplementsSelected = {};
+	FSContext.Telemetry.AttachedImplementsTurnedOn = {};
+	FSContext.Telemetry.AttachedImplementsWear = {};
 end
 
 function FSTelemetry:IsDrivingVehicle()
@@ -134,10 +139,7 @@ function FSTelemetry:ProcessVehicleData()
 	FSTelemetry:ProcessWiper(specWipers, mission);
 	FSTelemetry:ProcessHonk(specHonk);
 
-	FSContext.Telemetry.AttachedImplementsPosition = {};
-	FSContext.Telemetry.AttachedImplementsLowered = {};
-	FSContext.Telemetry.AttachedImplementsSelected = {};
-	FSContext.Telemetry.AttachedImplementsTurnedOn = {};
+	FSTelemetry:ClearAttachedImplements();
 	FSTelemetry:ProcessAttachedImplements(vehicle, false, 0, 0);
 
 	FSTelemetry:ProcessAngleRotation(vehicle);
@@ -146,14 +148,19 @@ function FSTelemetry:ProcessVehicleData()
 end
 
 function FSTelemetry:ProcessAttachedImplements(vehicle, invertX, x, depth)
-	local attachedImplements = vehicle:getAttachedImplements()
+	local attachedImplements = vehicle:getAttachedImplements();
+	if attachedImplements == nil then
+		return;
+	end
+
     for _, implement in pairs(attachedImplements) do
 		local object = implement.object
 		if object ~= nil and object.schemaOverlay ~= nil then
+			local wear = object.getDamageAmount ~= nil and object:getDamageAmount() or 0.0;
 			local selected = object:getIsSelected()
             local turnedOn = object.getIsTurnedOn ~= nil and object:getIsTurnedOn()
 			local lowered = object.getIsLowered ~= nil and object:getIsLowered(true);
-            local jointDesc = vehicle.schemaOverlay.attacherJoints[implement.jointDescIndex]
+            local jointDesc = vehicle.schemaOverlay.attacherJoints[implement.jointDescIndex];
 			if jointDesc ~= nil then
 				local invertX = invertX ~= jointDesc.invertX
                 local baseX
@@ -168,6 +175,7 @@ function FSTelemetry:ProcessAttachedImplements(vehicle, invertX, x, depth)
 				FSContext.Telemetry.AttachedImplementsLowered[baseX] = lowered;
 				FSContext.Telemetry.AttachedImplementsSelected[baseX] = selected;
 				FSContext.Telemetry.AttachedImplementsTurnedOn[baseX] = turnedOn;
+				FSContext.Telemetry.AttachedImplementsWear[baseX] = wear;
 				if FSContext.MaxDepthImplements > depth then
 					FSTelemetry:ProcessAttachedImplements(object, invertX, baseX, depth + 1)
 				end
@@ -262,10 +270,10 @@ function FSTelemetry:ProcessAiActive(vehicle)
 end
 
 function FSTelemetry:ProcessWear(wearable)
-	if wearable ~= nil and wearable.totalAmount ~= nil then
+	if wearable ~= nil and wearable.damage ~= nil then
 		FSContext.Telemetry.Wear = wearable.damage;
 	else
-		FSContext.Telemetry.Wear = 0;
+		FSContext.Telemetry.Wear = 0.0;
 	end;
 end
 

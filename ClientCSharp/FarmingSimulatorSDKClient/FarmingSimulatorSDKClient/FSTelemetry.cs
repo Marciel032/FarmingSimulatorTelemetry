@@ -17,6 +17,7 @@ namespace FarmingSimulatorSDKClient
         public WeatherType WeatherCurrent { get; set; }
         public WeatherType WeatherNext { get; set; }
         public int Day { get; set; }
+        public GameEditionType GameEdition { get; set; }
         #endregion GameData
 
         #region VehicleData
@@ -56,6 +57,7 @@ namespace FarmingSimulatorSDKClient
         public bool[] AttachedImplementsLowered { get; set; }
         public bool[] AttachedImplementsSelected { get; set; }
         public bool[] AttachedImplementsTurnedOn { get; set; }
+        public decimal[] AttachedImplementsWear { get; set; }
         public decimal AngleRotation { get; set; }
         public decimal  Mass { get; set; }
         public decimal TotalMass { get; set; }
@@ -75,5 +77,10 @@ namespace FarmingSimulatorSDKClient
         Rain = 2,
         Cloud = 3,
         Snow = 4
+    }
+
+    public enum GameEditionType : short {
+        FS_19 = 19,
+        FS_22 = 22
     }
 }
