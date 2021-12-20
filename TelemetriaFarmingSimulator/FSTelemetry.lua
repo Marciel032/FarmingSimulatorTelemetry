@@ -135,7 +135,7 @@ function FSTelemetry:ProcessVehicleData()
 	FSTelemetry:ProcessAiActive(vehicle);
 	FSTelemetry:ProcessWear(specWearable);
 	FSTelemetry:ProcessOperationTime(vehicle);
-	FSTelemetry:ProcessFuel(vehicle);
+	FSTelemetry:ProcessFuel(vehicle, specMotorized);
 	FSTelemetry:ProcessCruiseControl(specDrivable);
 	FSTelemetry:ProcessHandBrake(specDrivable);
 	FSTelemetry:ProcessTurnLightsHazard(specLights);
@@ -301,7 +301,7 @@ function FSTelemetry:ProcessFuel(vehicle, motorized)
 		return;
 	end
 
-	for _, consumer in pairs(motorized.consumersByFillTypeName) do
+	for _, consumer in pairs(motorized.consumersByFillTypeName) do		
 		if consumer.fillType == FillType.DIESEL then
 			FSContext.Telemetry.FuelType = 1;
 		elseif consumer.fillType == FillType.ELECTRICCHARGE then
