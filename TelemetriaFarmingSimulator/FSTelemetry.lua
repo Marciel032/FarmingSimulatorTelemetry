@@ -1,5 +1,5 @@
 FSTelemetry = {}
-FSContext = {	
+local FSContext = {
 	UpdateInterval = {
 		Target = 16.66, --Restrict to 60 FPS. 16.66 = 1000ms / 60 frames
 		Current = 0.0
@@ -17,6 +17,7 @@ FSContext = {
 function FSTelemetry:loadMap(name)
 	FSTelemetry:ClearGameTelemetry();
 	FSTelemetry:ClearVehicleTelemetry();
+	FSTelemetry:ProcessGameEdition();
 end;
 
 function FSTelemetry:update(dt)
@@ -49,10 +50,12 @@ function FSTelemetry:ClearGameTelemetry()
 	FSContext.Telemetry.WeatherCurrent = 0;
 	FSContext.Telemetry.WeatherNext = 0;
 	FSContext.Telemetry.Day = 0;
+	FSContext.Telemetry.GameEdition = 0;
 end
 
 function FSTelemetry:ClearVehicleTelemetry()
 	FSContext.Telemetry.VehicleName = "";
+	FSContext.Telemetry.FuelType = 0;  --0 Undefined | 1 Diesel | 2 Eletric | 3 Methane
 	FSContext.Telemetry.FuelMax = 0.0;
 	FSContext.Telemetry.Fuel = 0.0;
 	FSContext.Telemetry.RPMMin = 0;
@@ -84,14 +87,23 @@ function FSTelemetry:ClearVehicleTelemetry()
 	FSContext.Telemetry.VehiclePrice = 0.0;
 	FSContext.Telemetry.VehicleSellPrice = 0.0;
 	FSContext.Telemetry.IsHonkOn = false;
-	FSContext.Telemetry.AttachedImplementsPosition = {};
-	FSContext.Telemetry.AttachedImplementsLowered = {};
-	FSContext.Telemetry.AttachedImplementsSelected = {};
-	FSContext.Telemetry.AttachedImplementsTurnedOn = {};
 	FSContext.Telemetry.AngleRotation = 0.0;
 	FSContext.Telemetry.Mass = 0.0;
 	FSContext.Telemetry.TotalMass = 0.0;
 	FSContext.Telemetry.IsOnField = false;
+	FSContext.Telemetry.DefMax = 0.0;
+	FSContext.Telemetry.Def = 0.0;
+	FSContext.Telemetry.AirMax = 0.0;
+	FSContext.Telemetry.Air = 0.0;
+	FSTelemetry:ClearAttachedImplements();
+end
+
+function FSTelemetry:ClearAttachedImplements()
+	FSContext.Telemetry.AttachedImplementsPosition = {};
+	FSContext.Telemetry.AttachedImplementsLowered = {};
+	FSContext.Telemetry.AttachedImplementsSelected = {};
+	FSContext.Telemetry.AttachedImplementsTurnedOn = {};
+	FSContext.Telemetry.AttachedImplementsWear = {};
 end
 
 function FSTelemetry:IsDrivingVehicle()
@@ -123,7 +135,7 @@ function FSTelemetry:ProcessVehicleData()
 	FSTelemetry:ProcessAiActive(vehicle);
 	FSTelemetry:ProcessWear(specWearable);
 	FSTelemetry:ProcessOperationTime(vehicle);
-	FSTelemetry:ProcessFuelLevelAndCapacity(vehicle);
+	FSTelemetry:ProcessFuel(vehicle, specMotorized);
 	FSTelemetry:ProcessCruiseControl(specDrivable);
 	FSTelemetry:ProcessHandBrake(specDrivable);
 	FSTelemetry:ProcessTurnLightsHazard(specLights);
@@ -132,26 +144,30 @@ function FSTelemetry:ProcessVehicleData()
 	FSTelemetry:ProcessWiper(specWipers, mission);
 	FSTelemetry:ProcessHonk(specHonk);
 
-	FSContext.Telemetry.AttachedImplementsPosition = {};
-	FSContext.Telemetry.AttachedImplementsLowered = {};
-	FSContext.Telemetry.AttachedImplementsSelected = {};
-	FSContext.Telemetry.AttachedImplementsTurnedOn = {};
+	FSTelemetry:ClearAttachedImplements();
 	FSTelemetry:ProcessAttachedImplements(vehicle, false, 0, 0);
 
 	FSTelemetry:ProcessAngleRotation(vehicle);
 	FSTelemetry:ProcessMass(vehicle);
 	FSTelemetry:ProcessOnField(vehicle);
+	FSTelemetry:ProcessDef(vehicle);
+	FSTelemetry:ProcessAir(vehicle);
 end
 
 function FSTelemetry:ProcessAttachedImplements(vehicle, invertX, x, depth)
-	local attachedImplements = vehicle:getAttachedImplements()
+	local attachedImplements = vehicle:getAttachedImplements();
+	if attachedImplements == nil then
+		return;
+	end
+
     for _, implement in pairs(attachedImplements) do
 		local object = implement.object
 		if object ~= nil and object.schemaOverlay ~= nil then
+			local wear = object.getDamageAmount ~= nil and object:getDamageAmount() or 0.0;
 			local selected = object:getIsSelected()
             local turnedOn = object.getIsTurnedOn ~= nil and object:getIsTurnedOn()
 			local lowered = object.getIsLowered ~= nil and object:getIsLowered(true);
-            local jointDesc = vehicle.schemaOverlay.attacherJoints[implement.jointDescIndex]
+            local jointDesc = vehicle.schemaOverlay.attacherJoints[implement.jointDescIndex];
 			if jointDesc ~= nil then
 				local invertX = invertX ~= jointDesc.invertX
                 local baseX
@@ -166,6 +182,7 @@ function FSTelemetry:ProcessAttachedImplements(vehicle, invertX, x, depth)
 				FSContext.Telemetry.AttachedImplementsLowered[baseX] = lowered;
 				FSContext.Telemetry.AttachedImplementsSelected[baseX] = selected;
 				FSContext.Telemetry.AttachedImplementsTurnedOn[baseX] = turnedOn;
+				FSContext.Telemetry.AttachedImplementsWear[baseX] = wear;
 				if FSContext.MaxDepthImplements > depth then
 					FSTelemetry:ProcessAttachedImplements(object, invertX, baseX, depth + 1)
 				end
@@ -260,10 +277,10 @@ function FSTelemetry:ProcessAiActive(vehicle)
 end
 
 function FSTelemetry:ProcessWear(wearable)
-	if wearable ~= nil and wearable.totalAmount ~= nil then
-		FSContext.Telemetry.Wear = wearable.totalAmount;
+	if wearable ~= nil and wearable.damage ~= nil then
+		FSContext.Telemetry.Wear = wearable.damage;
 	else
-		FSContext.Telemetry.Wear = 0;
+		FSContext.Telemetry.Wear = 0.0;
 	end;
 end
 
@@ -275,20 +292,34 @@ function FSTelemetry:ProcessOperationTime(vehicle)
 	end;
 end
 
-function FSTelemetry:ProcessFuelLevelAndCapacity(vehicle)
-	--TODO: GET CURRENT FILL TYPE
-	local fuelFillType = vehicle:getConsumerFillUnitIndex(FillType.DIESEL)
-	if vehicle.getFillUnitCapacity ~= nil then
-		FSContext.Telemetry.FuelMax = vehicle:getFillUnitCapacity(fuelFillType);
-	else
-		FSContext.Telemetry.FuelMax = 0;
-	end;
+function FSTelemetry:ProcessFuel(vehicle, motorized)
+	FSContext.Telemetry.FuelType = 0;
+	FSContext.Telemetry.FuelMax = 0;
+	FSContext.Telemetry.Fuel = 0;
 
-	if vehicle.getFillUnitFillLevel ~= nil then
-		FSContext.Telemetry.Fuel = vehicle:getFillUnitFillLevel(fuelFillType);
-	else
-		FSContext.Telemetry.Fuel = 0;
-	end;
+	if motorized == nil then
+		return;
+	end
+
+	for _, consumer in pairs(motorized.consumersByFillTypeName) do		
+		if consumer.fillType == FillType.DIESEL then
+			FSContext.Telemetry.FuelType = 1;
+		elseif consumer.fillType == FillType.ELECTRICCHARGE then
+			FSContext.Telemetry.FuelType = 2;
+		elseif consumer.fillType == FillType.METHANE then
+			FSContext.Telemetry.FuelType = 3;
+		end
+
+		if FSContext.Telemetry.FuelType > 0 then
+			if vehicle.getFillUnitCapacity ~= nil then
+				FSContext.Telemetry.FuelMax = vehicle:getFillUnitCapacity(consumer.fillUnitIndex);
+			end;
+			if vehicle.getFillUnitFillLevel ~= nil then
+				FSContext.Telemetry.Fuel = vehicle:getFillUnitFillLevel(consumer.fillUnitIndex);
+			end;
+			return;
+		end
+	end
 end
 
 function FSTelemetry:ProcessCruiseControl(drivable)
@@ -360,11 +391,11 @@ end
 function FSTelemetry:ProcessWiper(wipers, mission)
 	FSContext.Telemetry.IsWipersOn = false;
 	if wipers ~= nil and wipers.hasWipers then
-		local rainScale = (mission.environment ~= nil and mission.environment.weather ~= nil and mission.environment.weather.getRainFallScale ~= nil) and mission.environment.weather:getRainFallScale() or 0;		
+		local rainScale = (mission.environment ~= nil and mission.environment.weather ~= nil and mission.environment.weather.getRainFallScale ~= nil) and mission.environment.weather:getRainFallScale() or 0;
 		if rainScale > 0 then
 			for _, wiper in pairs(wipers.wipers) do
-				for stateIndex,state in ipairs(wiper.states) do					
-					if rainScale <= state.maxRainValue then						
+				for stateIndex,state in ipairs(wiper.states) do
+					if rainScale <= state.maxRainValue then
 						FSContext.Telemetry.IsWipersOn = true;
 						return
 					end
@@ -412,6 +443,32 @@ function FSTelemetry:ProcessOnField(vehicle)
 	FSContext.Telemetry.IsOnField = vehicle.getIsOnField ~= nil and vehicle:getIsOnField();
 end
 
+function FSTelemetry:ProcessDef(vehicle)
+	if vehicle.getConsumerFillUnitIndex ~= nil then
+		local fillUnitIndex = vehicle:getConsumerFillUnitIndex(FillType.DEF);
+		if fillUnitIndex ~= nil then
+			FSContext.Telemetry.Def = vehicle:getFillUnitFillLevel(fillUnitIndex);
+			FSContext.Telemetry.DefMax = vehicle:getFillUnitCapacity(fillUnitIndex);
+			return;
+		end
+	end
+	FSContext.Telemetry.DefMax = 0.0;
+	FSContext.Telemetry.Def = 0.0;
+end
+
+function FSTelemetry:ProcessAir(vehicle)
+	if vehicle.getConsumerFillUnitIndex ~= nil then
+		local fillUnitIndex = vehicle:getConsumerFillUnitIndex(FillType.AIR);
+		if fillUnitIndex ~= nil then
+			FSContext.Telemetry.Air = vehicle.getFillUnitFillLevel ~= nil and vehicle:getFillUnitFillLevel(fillUnitIndex) or 0.0;
+			FSContext.Telemetry.AirMax = vehicle.getFillUnitFillLevel ~= nil and vehicle:getFillUnitCapacity(fillUnitIndex) or 0.0;
+			return;
+		end
+	end
+	FSContext.Telemetry.AirMax = 0.0;
+	FSContext.Telemetry.Air = 0.0;
+end
+
 function FSTelemetry:ProcessGameData()
 	if g_currentMission.player ~= nil then
         local farm = g_farmManager:getFarmById(g_currentMission.player.farmId)
@@ -438,6 +495,13 @@ function FSTelemetry:ProcessGameData()
 		FSContext.Telemetry.WeatherNext = environment.weather:getWeatherTypeAtTime(dayPlus6h, timePlus6h);
 
 		FSContext.Telemetry.Day = environment.currentDay;
+	end
+end
+
+function FSTelemetry:ProcessGameEdition()
+	FSContext.Telemetry.GameEdition = 19;
+	if g_minModDescVersion == 60 then
+		FSContext.Telemetry.GameEdition = 22;
 	end
 end
 
@@ -522,7 +586,7 @@ function FSTelemetry:RefreshPipe()
 		end
 
 		FSContext.PipeControl.Pipe = io.open(FSContext.PipeControl.PipeName, "w");
-	end	
+	end
 end
 
 addModEventListener(FSTelemetry);

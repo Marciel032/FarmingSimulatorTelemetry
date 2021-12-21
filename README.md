@@ -60,6 +60,7 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * Speed 
 * FuelMax 
 * Fuel 
+* FuelType
 * RPMMin
 * RPMMax 
 * RPM 
@@ -90,10 +91,15 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * AttachedImplementsLowered
 * AttachedImplementsSelected
 * AttachedImplementsTurnedOn
+* AttachedImplementsWear
 * AngleRotation
 * Mass
 * TotalMass
 * IsOnField
+* Def
+* DefMax
+* Air
+* AirMax
 
 ### Game
 * Money
@@ -104,6 +110,7 @@ private void TelemetryReader_OnTelemetryRead(FSTelemetry telemetry)
 * CurrentWeather
 * NextWeather
 * CurrentDay
+* GameEdition
 
 ## 📫 Contributing to the project
 To contribute, follow these steps:
