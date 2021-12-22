@@ -426,6 +426,12 @@ function FSTelemetry:ProcessAngleRotation(vehicle)
 	--local posX, posY, posZ = getTranslation(vehicle.rootNode)
 	--print("posX: " .. posX .. "posZ: " .. posZ);
 
+
+	--g_currentMission.inGameMenu.hud.ingameMap.worldSizeX ??
+	--g_currentMission.inGameMenu.hud.ingameMap.worldSizeY ??
+	--g_currentMission.mapWidth ??
+	--g_currentMission.mapHeight ??
+
 	FSContext.Telemetry.AngleRotation = direction;
 end
 
