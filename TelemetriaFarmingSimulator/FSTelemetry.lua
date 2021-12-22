@@ -432,6 +432,19 @@ function FSTelemetry:ProcessAngleRotation(vehicle)
 	--g_currentMission.mapWidth ??
 	--g_currentMission.mapHeight ??
 
+
+
+
+	--Roll = "Get value from your game" 'in degrees - (-180 to 180) -  left-right angle in radians
+	--Pitch = "Get value from your game" 'in degrees - (-180 to 180) - forward-backward angle in radians
+	--Yaw = "Get value from your game" 'in degrees - (-180 to 180)
+	--RollSpeed = "Get value from your game" 'in (rad/sec)
+	--PitchSpeed = "Get value from your game" 'in (rad/sec)
+	--YawSpeed = "Get value from your game" 'in (rad/sec)
+	--Vertical = "Get value from your game" 'in g's acceleration - acceleration along the vertical axis, in g
+	--Lateral = "Get value from your game" 'in g's acceleration - acceleration along the latitude axis, in g
+	--Longitudinal = "Get value from your game" 'in g's acceleration - acceleration along the longitudinal axis, in g
+
 	FSContext.Telemetry.AngleRotation = direction;
 end
 
