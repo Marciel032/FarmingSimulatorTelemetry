@@ -37,7 +37,9 @@ function FSTelemetry:update(dt)
 			FSTelemetry:ProcessGameData();
 			FSTelemetry:WriteTelemetry();
 		end;
-		--print(DebugUtil.printTableRecursively(g_currentMission.controlledVehicle,".",0,5));
+		--print(DebugUtil.printTableRecursively(FSTelemetry.getCurrentVehicle(),".",0,5));
+		--print(FSTelemetry:GetCurrentVehicle():getFullName());
+		--print(DebugUtil.printTableRecursively(FSTelemetry:GetCurrentVehicle():getBrand(),".",0,1));
 	end;
 end
 
@@ -107,14 +109,14 @@ function FSTelemetry:ClearAttachedImplements()
 end
 
 function FSTelemetry:IsDrivingVehicle()
-	local vehicle = g_currentMission.controlledVehicle;
+	local vehicle = FSTelemetry:GetCurrentVehicle();
 	local hasVehicle = vehicle ~= nil;
 	return hasVehicle and vehicle.spec_motorized ~= nil;
 end
 
 function FSTelemetry:ProcessVehicleData()
 	local mission = g_currentMission;
-	local vehicle = mission.controlledVehicle;
+	local vehicle = FSTelemetry:GetCurrentVehicle();
 	local motor = vehicle:getMotor();
 	local specMotorized = vehicle.spec_motorized;
 	local specDrivable = vehicle.spec_drivable;
@@ -131,7 +133,7 @@ function FSTelemetry:ProcessVehicleData()
 	FSTelemetry:ProcessRPM(motor);
 	FSTelemetry:ProcessReverseDriving(vehicle, specMotorized);
 	FSTelemetry:ProcessEngineStarted(specMotorized);
-	FSTelemetry:ProcessVehicleName(mission);
+	FSTelemetry:ProcessVehicleName(vehicle);
 	FSTelemetry:ProcessAiActive(vehicle);
 	FSTelemetry:ProcessWear(specWearable);
 	FSTelemetry:ProcessOperationTime(vehicle);
@@ -265,11 +267,20 @@ function FSTelemetry:ProcessReverseDriving(vehicle, motorized)
 end
 
 function FSTelemetry:ProcessEngineStarted(motorized)
-	FSContext.Telemetry.IsEngineStarted = motorized ~= nil and motorized.isMotorStarted;
+	-- motorState
+	-- 1 = MOTOR_STATE_OFF
+	-- 3 = MOTOR_STATE_IGNITION
+	-- 4 = MOTOR_STATE_ON
+	
+	if g_minModDescVersion >= 90 then
+		FSContext.Telemetry.IsEngineStarted = motorized ~= nil and motorized.motorState ~= 1;
+	else
+		FSContext.Telemetry.IsEngineStarted = motorized ~= nil and motorized.isMotorStarted;
+	end	
 end
 
-function FSTelemetry:ProcessVehicleName(mission)
-	FSContext.Telemetry.VehicleName = mission.currentVehicleName;
+function FSTelemetry:ProcessVehicleName(vehicle)
+	FSContext.Telemetry.VehicleName = vehicle:getFullName();
 end
 
 function FSTelemetry:ProcessAiActive(vehicle)
@@ -353,7 +364,14 @@ function FSTelemetry:ProcessTurnLightsHazard(lights)
 		FSContext.Telemetry.IsLightTurnLeftEnabled = state == Lights.TURNLIGHT_LEFT;
 		FSContext.Telemetry.IsLightHazardOn = state == Lights.TURNLIGHT_HAZARD;
 
-		local alpha = MathUtil.clamp((math.cos(7 * getShaderTimeSec()) + 0.2), 0, 1)
+		
+		local alpha = (math.cos(7 * getShaderTimeSec()) + 0.2);
+		if alpha < 0 then
+			alpha = 0
+		elseif alpha > 1 then
+			alpha = 1
+		end
+		--local alpha = MathUtil.clamp((math.cos(7 * getShaderTimeSec()) + 0.2), 0, 1)
 		FSContext.Telemetry.IsLightTurnRightOn = (FSContext.Telemetry.IsLightTurnRightEnabled or FSContext.Telemetry.IsLightHazardOn) and alpha > 0.5;
 		FSContext.Telemetry.IsLightTurnLeftOn = (FSContext.Telemetry.IsLightTurnLeftEnabled or FSContext.Telemetry.IsLightHazardOn) and alpha > 0.5;
 	else
@@ -470,8 +488,9 @@ function FSTelemetry:ProcessAir(vehicle)
 end
 
 function FSTelemetry:ProcessGameData()
-	if g_currentMission.player ~= nil then
-        local farm = g_farmManager:getFarmById(g_currentMission.player.farmId)
+	local player = FSTelemetry:GetCurrentPlayer();
+	if player ~= nil then
+        local farm = g_farmManager:getFarmById(player.farmId)
 		if farm ~= nil then
 			FSContext.Telemetry.Money = farm.money;
 			--g_currentMission.mission.missionInfo.money
@@ -491,6 +510,7 @@ function FSTelemetry:ProcessGameData()
 
 		local sixHours = 6 * 60 * 60 * 1000;
 		local dayPlus6h, timePlus6h = environment:getDayAndDayTime(environment.dayTime + sixHours, environment.currentDay);
+		
 		FSContext.Telemetry.WeatherCurrent = environment.weather:getWeatherTypeAtTime(environment.currentDay, environment.dayTime);
 		FSContext.Telemetry.WeatherNext = environment.weather:getWeatherTypeAtTime(dayPlus6h, timePlus6h);
 
@@ -502,6 +522,8 @@ function FSTelemetry:ProcessGameEdition()
 	FSContext.Telemetry.GameEdition = 19;
 	if g_minModDescVersion == 60 then
 		FSContext.Telemetry.GameEdition = 22;
+	elseif g_minModDescVersion == 90 then
+		FSContext.Telemetry.GameEdition = 25;
 	end
 end
 
@@ -586,6 +608,22 @@ function FSTelemetry:RefreshPipe()
 		end
 
 		FSContext.PipeControl.Pipe = io.open(FSContext.PipeControl.PipeName, "w");
+	end
+end
+
+function FSTelemetry:GetCurrentVehicle()
+	if g_minModDescVersion >= 90 then
+		return FSTelemetry:GetCurrentPlayer().getCurrentVehicle();
+	else
+		return g_currentMission.controlledVehicle;
+	end
+end
+
+function FSTelemetry:GetCurrentPlayer()
+	if g_minModDescVersion >= 90 then
+		return g_currentMission.playerSystem.playersByUserId[g_currentMission.playerUserId];
+	else
+		return g_currentMission.player;
 	end
 end
 

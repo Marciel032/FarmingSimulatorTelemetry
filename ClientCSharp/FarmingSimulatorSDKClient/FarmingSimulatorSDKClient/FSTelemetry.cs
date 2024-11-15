@@ -86,7 +86,8 @@ namespace FarmingSimulatorSDKClient
 
     public enum GameEditionType : short {
         FS_19 = 19,
-        FS_22 = 22
+        FS_22 = 22,
+        FS_25 = 25
     }
 
     public enum FuelType : short {

@@ -77,6 +77,7 @@ namespace FarmingSimulatorSDKClient
         }
 
         private void ProcessTelemetry(string telemetryText) {
+            Console.WriteLine(telemetryText);
             var values = telemetryText.Split('§');
             for (short i = 1; i < values.Length - 1; i++)
             {
@@ -93,7 +94,7 @@ namespace FarmingSimulatorSDKClient
                 OnTelemetryRead?.Invoke(telemetry);
         }
 
-        private object ConvertToType(Type type, string value) {
+        private object ConvertToType(Type type, string value) {            
             if (type == typeof(decimal))
                 return ConvertDecimal(value);
             else if (type == typeof(bool))
